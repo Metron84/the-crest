@@ -1,0 +1,30 @@
+:root {
+  --color-navy: #0a111f;
+  --color-navy-deep: #060b14;
+  --color-paper: #f2ede4;
+  --color-signal: #d8232a;
+  --font-display: var(--font-bodoni), "Bodoni Moda", serif;
+  --font-body: var(--font-archivo), "Archivo", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--color-navy);
+  color: var(--color-paper);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-signal);
+  color: var(--color-paper);
+}
