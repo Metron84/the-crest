@@ -13,6 +13,7 @@ import {
   arrivalSummary,
   colourMap,
   leagueMap,
+  playPool,
 } from "../lib/crest/engine.js";
 import { buildReport, meetPhrase, REPORT_PHRASES } from "../lib/crest/report.js";
 
@@ -93,6 +94,40 @@ if (facetSeen.size !== 12) {
   failures++;
   console.log(`FAIL deck: ${facetSeen.size} facets covered, expected 12`);
 }
+if (CARDS.some((c) => c.context && /\u2014|\u2013/.test(c.context))) {
+  failures++;
+  console.log("FAIL deck: em-dash in card context");
+}
+
+const LIFE_CARDS = CARDS.filter((c) => c.part === 1);
+function lifeAnswersFromBits(bits) {
+  return LIFE_CARDS.map((card, i) => ({
+    cardId: card.id,
+    value: /** @type {1|-1} */ ((bits >> i) & 1 ? 1 : -1),
+  }));
+}
+for (let bits = 0; bits < 32; bits++) {
+  const pool = playPool(lifeAnswersFromBits(bits));
+  if (!pool.length) {
+    failures++;
+    console.log(`FAIL funnel: Life pattern ${bits.toString(2).padStart(5, "0")} emptied the pool`);
+    break;
+  }
+}
+let lifeMiss = 0;
+for (const club of CLUBS) {
+  const answers = LIFE_CARDS.map((card) => {
+    const axis = blend(club, card.facet);
+    const value = Math.abs(axis) < 0.2 ? 1 : Math.sign(axis);
+    return { cardId: card.id, value: /** @type {1|-1} */ (value) };
+  });
+  if (!playPool(answers).some((row) => row.slug === club.slug)) lifeMiss++;
+}
+if (lifeMiss) {
+  failures++;
+  console.log(`FAIL funnel: ${lifeMiss} clubs miss their own Life pool`);
+}
+console.log(`funnel: 32 Life patterns all non-empty, own-club Life misses ${lifeMiss}`);
 
 const toAnswers = (hand) =>
   CARDS.filter((c) => hand[c.id]).map((c) => ({
@@ -220,6 +255,11 @@ if (!englandProbe.some((row) => row.competition === "Premier League")) {
 
 const answers = [];
 for (let i = 0; i < TOTAL; i++) {
+  if (!playPool(answers).length) {
+    failures++;
+    console.log(`FAIL funnel: play pool empty before card ${i + 1}`);
+    break;
+  }
   const next = nextCard(answers);
   if (!next) {
     failures++;
@@ -228,9 +268,16 @@ for (let i = 0; i < TOTAL; i++) {
   }
   answers.push({ cardId: next.card.id, value: rnd() < 0.5 ? 1 : -1 });
 }
-if (answers.length === TOTAL && nextCard(answers)) {
-  failures++;
-  console.log("FAIL flow: nextCard still open after the deck");
+if (answers.length === TOTAL) {
+  const finalPool = playPool(answers);
+  if (finalPool.length < 3) {
+    failures++;
+    console.log(`FAIL funnel: final play pool ${finalPool.length}, expected at least 3`);
+  }
+  if (nextCard(answers)) {
+    failures++;
+    console.log("FAIL flow: nextCard still open after the deck");
+  }
 }
 const arrival = arrivalSummary(answers);
 console.log(

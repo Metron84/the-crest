@@ -63,7 +63,9 @@ export default function CrestArrival({
 
   return (
     <section className={styles.arrival}>
-      <p className={styles.kicker}>{confident ? "Your club" : "You sit between two"}</p>
+      <p className={styles.kicker}>
+        {matchPercent(score) < 80 ? "Closest match" : confident ? "Your club" : "You sit between two"}
+      </p>
 
       <div className={styles.arrivalBand} style={{ "--club": club.color || "#D8232A" }}>
         <h1 className={styles.arrivalName}>{club.name}</h1>

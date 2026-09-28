@@ -156,6 +156,7 @@ export default function CrestSwipe({ embedded = false }) {
       </header>
 
       <section className={styles.play} aria-live="polite">
+        {card.context ? <p className={styles.cardContext}>{card.context}</p> : null}
         <div className={styles.stage}>
           <SwipeCard key={card.id} card={card} index={index} onAnswer={answer} onDrag={onDrag} />
         </div>
