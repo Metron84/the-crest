@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { SITE_URL } from "@/lib/config";
 import { buildReport, trait, REPORT_PHRASES } from "@/lib/crest/report";
+import { crestSignupHref } from "@/lib/crest/signup";
 import styles from "./CrestReport.module.css";
 
 const GROUPS = ["Heart", "Mind", "Soul"];
@@ -182,17 +183,15 @@ export default function CrestReport({ answers, group, colour, onBack, onRestart 
         <button type="button" className={styles.share} onClick={share}>
           {copied ? "Link copied" : "Share my crest"}
         </button>
+        <Link href={crestSignupHref(club.id)} className={styles.ghost}>
+          Join The Reflective Football
+        </Link>
         <button type="button" className={styles.outline} onClick={onRestart}>
           Swipe again
         </button>
-        <div className={styles.pair}>
-          <Link href="/guesser" className={styles.ghost}>
-            Play The Guesser
-          </Link>
-          <Link href="/films" className={styles.ghost}>
-            Watch the films
-          </Link>
-        </div>
+        <Link href={`${SITE_URL}/films`} className={styles.ghost}>
+          Watch the films
+        </Link>
       </div>
     </article>
   );

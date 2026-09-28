@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PART_LABEL, TOTAL } from "@/lib/crest/cards";
 import { DEFAULT_ALPHA, nextCard } from "@/lib/crest/engine";
 import SwipeCard from "./SwipeCard";
@@ -11,19 +10,17 @@ import CrestReport from "./CrestReport";
 import styles from "./CrestSwipe.module.css";
 
 /**
- * The Crest. Pick where to look, swipe twenty cards, arrive at a club.
+ * The Crest. Standalone play: home, twenty cards, arrival, report.
  * Answers live in component state for the session only.
- * On the TRF site the chrome already has a header and footer, so the
- * in-game tab bar is hidden (`embedded`).
  *
  * @param {{embedded?: boolean}} [props]
  */
 export default function CrestSwipe({ embedded = false }) {
   const [step, setStep] = useState("scope");
   const [group, setGroup] = useState(null);
-  const [colour, setColour] = useState(null);
   const [answers, setAnswers] = useState([]);
   const [drag, setDrag] = useState(0);
+  const boardRef = useRef(null);
 
   useEffect(() => {
     setGroup(readStoredScope());
@@ -36,13 +33,17 @@ export default function CrestSwipe({ embedded = false }) {
 
   const onDrag = useCallback((value) => setDrag(value), []);
 
+  useEffect(() => {
+    if (step !== "play") return;
+    boardRef.current?.focus({ preventScroll: true });
+  }, [step, current?.card?.id]);
+
   function setScope(next) {
     setGroup(next);
     writeStoredScope(next);
   }
 
   function start() {
-    setColour(null);
     setAnswers([]);
     setStep("play");
   }
@@ -67,9 +68,15 @@ export default function CrestSwipe({ embedded = false }) {
 
   function restart() {
     setAnswers([]);
-    setColour(null);
     setDrag(0);
     setStep("scope");
+  }
+
+  function onPlayKey(event) {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    const side = event.key === "ArrowLeft" ? "left" : "right";
+    event.currentTarget.querySelector(`[data-choice="${side}"]`)?.click();
   }
 
   if (step === "report") {
@@ -78,11 +85,10 @@ export default function CrestSwipe({ embedded = false }) {
         <CrestReport
           answers={answers}
           group={group}
-          colour={colour}
+          colour={null}
           onBack={() => setStep("arrival")}
           onRestart={restart}
         />
-        {embedded ? null : <TabBar />}
       </div>
     );
   }
@@ -93,31 +99,21 @@ export default function CrestSwipe({ embedded = false }) {
         <CrestArrival
           answers={answers}
           group={group}
-          colour={colour}
-          onColour={setColour}
           onOpenReport={() => setStep("report")}
           onRestart={restart}
         />
-        {embedded ? null : <TabBar />}
       </div>
     );
   }
 
   if (step === "scope" || !current) {
     return (
-      <>
-        <CrestHome
-          group={group}
-          onScope={setScope}
-          onStart={start}
-          backHref={embedded ? "/games" : null}
-        />
-        {embedded ? null : (
-          <div className={styles.board}>
-            <TabBar />
-          </div>
-        )}
-      </>
+      <CrestHome
+        group={group}
+        onScope={setScope}
+        onStart={start}
+        backHref={embedded ? "/games" : null}
+      />
     );
   }
 
@@ -127,47 +123,27 @@ export default function CrestSwipe({ embedded = false }) {
 
   return (
     <div
+      ref={boardRef}
       className={styles.board}
+      tabIndex={0}
+      onKeyDown={onPlayKey}
       style={{
         "--wash-left": Math.max(0, -drag),
         "--wash-right": Math.max(0, drag),
       }}
     >
-      <div className={`${styles.wash} ${styles.washLeft}`} aria-hidden="true" />
-      <div className={`${styles.wash} ${styles.washRight}`} aria-hidden="true" />
-
-      <header className={styles.topbar}>
-        <button type="button" className={styles.iconButton} onClick={back} aria-label="Back">
-          &larr;
-        </button>
-        <span className={styles.topbarTitle}>
-          Part {card.part}. {PART_LABEL[card.part]}
-        </span>
-        <button type="button" className={styles.textButton} onClick={restart}>
-          Restart
-        </button>
-      </header>
-
-      <section className={styles.play} aria-live="polite">
-        <h1 className={styles.question}>{card.question}</h1>
-
-        <div className={styles.stage}>
-          <span className={`${styles.sideLabel} ${styles.sideLeft}`} aria-hidden="true">
-            &larr; {card.left}
+      <header className={styles.playHead}>
+        <div className={styles.playHeadRow}>
+          <button type="button" className={styles.iconButton} onClick={back} aria-label="Back">
+            &larr;
+          </button>
+          <span className={styles.partLabel}>
+            {card.part} of 3 · {PART_LABEL[card.part]}
           </span>
-          <span className={`${styles.sideLabel} ${styles.sideRight}`} aria-hidden="true">
-            {card.right} &rarr;
-          </span>
-          <SwipeCard key={card.id} card={card} index={index} onAnswer={answer} onDrag={onDrag} />
+          <button type="button" className={styles.restart} onClick={restart}>
+            Restart
+          </button>
         </div>
-
-        <p className={styles.hint}>
-          Swipe the card, tap a side, or use the arrow keys.
-          {card.part === 1 ? " Personality cards count half." : ""}
-        </p>
-      </section>
-
-      <footer className={styles.progress}>
         <div
           className={styles.progressBar}
           role="progressbar"
@@ -177,21 +153,13 @@ export default function CrestSwipe({ embedded = false }) {
         >
           <span style={{ width: `${percent}%` }} />
         </div>
-        <span className={styles.progressLabel}>
-          Card {index + 1} of {TOTAL}
-        </span>
-      </footer>
-      {embedded ? null : <TabBar />}
-    </div>
-  );
-}
+      </header>
 
-function TabBar() {
-  return (
-    <nav className={styles.tabbar} aria-label="Site">
-      <Link href="/">Home</Link>
-      <Link href="/games">Games</Link>
-      <Link href="/account">Account</Link>
-    </nav>
+      <section className={styles.play} aria-live="polite">
+        <div className={styles.stage}>
+          <SwipeCard key={card.id} card={card} index={index} onAnswer={answer} onDrag={onDrag} />
+        </div>
+      </section>
+    </div>
   );
 }

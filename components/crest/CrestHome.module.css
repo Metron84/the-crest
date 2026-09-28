@@ -12,8 +12,8 @@
   isolation: isolate;
   display: flex;
   flex-direction: column;
-  min-height: calc(100svh - 4rem);
-  padding: 0 20px calc(28px + env(safe-area-inset-bottom));
+  min-height: 100svh;
+  padding: env(safe-area-inset-top) 20px calc(28px + env(safe-area-inset-bottom));
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-body);

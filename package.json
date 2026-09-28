@@ -7,7 +7,9 @@
     "dev": "next dev -p 4343",
     "build": "next build",
     "start": "next start",
-    "check": "node scripts/check.mjs"
+    "check": "node scripts/check.mjs",
+    "check:crest": "node scripts/check.mjs",
+    "crest:bias": "node scripts/crest-bias.mjs"
   },
   "dependencies": {
     "next": "16.2.10",

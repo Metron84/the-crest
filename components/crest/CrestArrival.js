@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { DEFAULT_ALPHA, arrivalSummary, colourMap } from "@/lib/crest/engine";
-import { buildReport, matchPercent } from "@/lib/crest/report";
+import { SITE_URL } from "@/lib/config";
+import { DEFAULT_ALPHA, arrivalSummary, colourMap, userVector } from "@/lib/crest/engine";
+import { buildReport, closeBehindReason, matchPercent } from "@/lib/crest/report";
+import { crestSignupHref } from "@/lib/crest/signup";
 import styles from "./CrestSwipe.module.css";
 
 const FAMILY_LABEL = {
@@ -36,8 +38,6 @@ const FAMILY_SWATCH = {
  * @param {{
  *   answers: import("@/lib/crest/engine").CrestAnswer[],
  *   group: string|null,
- *   colour: string|null,
- *   onColour: (family: string|null) => void,
  *   onOpenReport: () => void,
  *   onRestart: () => void,
  * }} props
@@ -45,18 +45,19 @@ const FAMILY_SWATCH = {
 export default function CrestArrival({
   answers,
   group,
-  colour,
-  onColour,
   onOpenReport,
   onRestart,
 }) {
-  const options = useMemo(() => ({ group, colour }), [group, colour]);
+  const [openColour, setOpenColour] = useState(null);
+  const options = useMemo(() => ({ group }), [group]);
   const summary = useMemo(() => arrivalSummary(answers, DEFAULT_ALPHA, options), [answers, options]);
   const rows = useMemo(() => colourMap(answers, DEFAULT_ALPHA, { group }), [answers, group]);
-  const report = useMemo(() => buildReport({ answers, group, colour }, "blend"), [answers, group, colour]);
+  const report = useMemo(() => buildReport({ answers, group, colour: null }, "blend"), [answers, group]);
+  const user = useMemo(() => userVector(answers), [answers]);
 
   const { club, score, confident, runnerUp, greenFlags, rub } = summary;
   const place = [club.city, club.country].filter(Boolean).join(", ");
+  const topName = club.name;
 
   return (
     <section className={styles.arrival}>
@@ -69,10 +70,7 @@ export default function CrestArrival({
           {club.founded ? ` · ${club.founded}` : ""}
           {club.home ? ` · ${club.home}` : ""}
         </p>
-        <p className={styles.arrivalScore}>
-          {matchPercent(score)}% agreement
-          {colour ? ` · wearing ${FAMILY_LABEL[colour]}` : ""}
-        </p>
+        <p className={styles.arrivalScore}>{matchPercent(score)}% agreement</p>
       </div>
 
       {!confident && runnerUp ? (
@@ -117,24 +115,43 @@ export default function CrestArrival({
       </div>
 
       <h2 className={styles.subhead}>If you bleed a colour</h2>
-      <p className={styles.hintLeft}>
-        Values cannot always split clubs of the same blood. Colour can. Tap a colour to re-rank.
-      </p>
+      <p className={styles.hintLeft}>Already wear a colour? See your closest club in it.</p>
       <ul className={styles.colourRows}>
-        {rows.map((row) => (
-          <li key={row.family}>
-            <button
-              type="button"
-              className={`${styles.colourRow} ${colour === row.family ? styles.colourRowActive : ""}`}
-              onClick={() => onColour(colour === row.family ? null : row.family)}
-              aria-pressed={colour === row.family}
-            >
-              <span className={styles.swatch} style={{ background: FAMILY_SWATCH[row.family] }} />
-              <span className={styles.colourName}>{FAMILY_LABEL[row.family]}</span>
-              <span className={styles.colourClubs}>{row.clubs.map((r) => r.club.name).join(", ")}</span>
-            </button>
-          </li>
-        ))}
+        {rows.map((row) => {
+          const best = row.clubs[0];
+          const open = openColour === row.family;
+          return (
+            <li key={row.family}>
+              <button
+                type="button"
+                className={`${styles.colourRow} ${open ? styles.colourRowActive : ""}`}
+                aria-expanded={open}
+                onClick={() => setOpenColour(open ? null : row.family)}
+              >
+                <span className={styles.swatch} style={{ background: FAMILY_SWATCH[row.family] }} />
+                <span className={styles.colourName}>{FAMILY_LABEL[row.family]}</span>
+                <span className={styles.colourBest}>{best.club.name}</span>
+                <span className={styles.colourPct}>{matchPercent(best.score)}%</span>
+              </button>
+              <div className={`${styles.colourExpand} ${open ? styles.colourExpandOpen : ""}`}>
+                <div>
+                  {row.clubs.map((entry, i) => (
+                    <div key={entry.club.slug} className={styles.colourClub}>
+                      <span>{i + 1}</span>
+                      <span>{entry.club.name}</span>
+                      <span>{matchPercent(entry.score)}%</span>
+                      {entry.club.slug === club.slug ? null : (
+                        <small>
+                          {closeBehindReason(user, club, entry.club, DEFAULT_ALPHA, topName)}
+                        </small>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </li>
+          );
+        })}
       </ul>
 
       {report ? (
@@ -154,10 +171,10 @@ export default function CrestArrival({
           Swipe again
         </button>
         <div className={styles.nextPair}>
-          <Link href="/guesser" className={styles.nextGhost}>
-            Play The Guesser
+          <Link href={crestSignupHref(club.slug)} className={styles.nextGhost}>
+            Join The Reflective Football
           </Link>
-          <Link href="/films" className={styles.nextGhost}>
+          <Link href={`${SITE_URL}/films`} className={styles.nextGhost}>
             Watch the films
           </Link>
         </div>
