@@ -105,7 +105,7 @@ export default function CrestHome({ group, onScope, onStart, backHref = "/games"
 
       <div className={styles.layout}>
         <div className={styles.copy}>
-          <h1 className={styles.headline}>Twenty swipes. One club that sounds like you.</h1>
+          <h1 className={styles.headline}>Eighteen swipes. One club that sounds like you.</h1>
           <p className={styles.subline}>{CLUBS.length} clubs. Two minutes.</p>
         </div>
 
@@ -113,15 +113,15 @@ export default function CrestHome({ group, onScope, onStart, backHref = "/games"
           <span className={`${styles.card} ${styles.backTwo}`} aria-hidden="true" />
           <span className={`${styles.card} ${styles.backOne}`} aria-hidden="true" />
           <span key={hint} className={`${styles.card} ${styles.front}`}>
-            <span className={styles.cardKicker}>Card 1 of 20</span>
-            <span className={styles.cardQuestion}>Calm or intense?</span>
+            <span className={styles.cardKicker}>Card 1 of 18</span>
+            <span className={styles.cardQuestion}>Living is about fun, or work?</span>
             <span className={styles.cardRow}>
               <span className={styles.cardLeft}>
                 <ArrowOut left />
-                Calm
+                Fun
               </span>
               <span className={styles.cardRight}>
-                Intense
+                Work
                 <ArrowOut />
               </span>
             </span>

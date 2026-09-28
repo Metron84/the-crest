@@ -3,7 +3,7 @@
  * Exits non-zero if a club breaks the scoring rules or the recovery
  * test misses its targets.
  */
-import { CARDS } from "../lib/crest/cards.js";
+import { CARDS, TOTAL } from "../lib/crest/cards.js";
 import { CLUBS, CREST_GROUPS } from "../lib/crest/clubs.js";
 import { CREST_COMPETITIONS } from "../lib/crest/competitions.js";
 import {
@@ -73,6 +73,25 @@ if (competitionCounts["Premier League"] !== 20) {
 if (competitionCounts.Championship !== 20) {
   failures++;
   console.log(`FAIL competitions: Championship has ${competitionCounts.Championship}, expected 20`);
+}
+
+if (CARDS.length !== TOTAL || TOTAL !== 18) {
+  failures++;
+  console.log(`FAIL deck: ${CARDS.length} cards, TOTAL ${TOTAL}, expected 18`);
+}
+const partCounts = { 1: 0, 2: 0, 3: 0 };
+const facetSeen = new Set();
+for (const c of CARDS) {
+  partCounts[c.part] += 1;
+  facetSeen.add(c.facet);
+}
+if (partCounts[1] !== 5 || partCounts[2] !== 6 || partCounts[3] !== 7) {
+  failures++;
+  console.log(`FAIL deck: parts ${partCounts[1]}/${partCounts[2]}/${partCounts[3]}, expected 5/6/7`);
+}
+if (facetSeen.size !== 12) {
+  failures++;
+  console.log(`FAIL deck: ${facetSeen.size} facets covered, expected 12`);
 }
 
 const toAnswers = (hand) =>
@@ -200,7 +219,7 @@ if (!englandProbe.some((row) => row.competition === "Premier League")) {
 }
 
 const answers = [];
-for (let i = 0; i < 20; i++) {
+for (let i = 0; i < TOTAL; i++) {
   const next = nextCard(answers);
   if (!next) {
     failures++;
@@ -209,9 +228,13 @@ for (let i = 0; i < 20; i++) {
   }
   answers.push({ cardId: next.card.id, value: rnd() < 0.5 ? 1 : -1 });
 }
+if (answers.length === TOTAL && nextCard(answers)) {
+  failures++;
+  console.log("FAIL flow: nextCard still open after the deck");
+}
 const arrival = arrivalSummary(answers);
 console.log(
-  `\nflow: 20 cards -> ${arrival.club.name} (${arrival.score.toFixed(3)}, p=${arrival.probability.toFixed(3)}, ${arrival.confident ? "confident" : "between"})`,
+  `\nflow: ${TOTAL} cards -> ${arrival.club.name} (${arrival.score.toFixed(3)}, p=${arrival.probability.toFixed(3)}, ${arrival.confident ? "confident" : "between"})`,
 );
 
 const dash = /\u2014|\u2013/;

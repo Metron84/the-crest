@@ -144,9 +144,10 @@
 .cardQuestion {
   font-family: var(--font-head);
   font-weight: 700;
-  font-size: 28px;
-  line-height: 1.1;
+  font-size: 22px;
+  line-height: 1.15;
   text-align: center;
+  text-wrap: balance;
 }
 
 .cardRow {
@@ -454,7 +455,7 @@
   }
 
   .cardQuestion {
-    font-size: 34px;
+    font-size: 26px;
   }
 
   .cta {

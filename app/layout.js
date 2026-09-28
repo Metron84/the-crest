@@ -21,7 +21,7 @@ const montserrat = Montserrat({
 export const metadata = {
   title: "The Crest",
   description:
-    "Twenty swipes. One club. Find the football club that sounds like your heart, thinks like your mind and feels like your soul.",
+    "Eighteen swipes. One club. Find the football club that sounds like your heart, thinks like your mind and feels like your soul.",
   icons: { icon: "/icon.png" },
 };
 

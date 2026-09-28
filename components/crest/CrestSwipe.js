@@ -10,7 +10,7 @@ import CrestReport from "./CrestReport";
 import styles from "./CrestSwipe.module.css";
 
 /**
- * The Crest. Standalone play: home, twenty cards, arrival, report.
+ * The Crest. Standalone play: home, eighteen cards, arrival, report.
  * Answers live in component state for the session only.
  *
  * @param {{embedded?: boolean}} [props]
