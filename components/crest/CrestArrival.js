@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { SITE_URL } from "@/lib/config";
 import { DEFAULT_ALPHA, arrivalSummary, colourMap, leagueMap, userVector } from "@/lib/crest/engine";
-import { buildReport, closeBehindReason, matchPercent } from "@/lib/crest/report";
+import { buildReport, closeBehindReason, matchPercent, roomPercent } from "@/lib/crest/report";
 import { crestSignupHref } from "@/lib/crest/signup";
 import styles from "./CrestSwipe.module.css";
 
@@ -38,6 +38,7 @@ const FAMILY_SWATCH = {
  * @param {{
  *   answers: import("@/lib/crest/engine").CrestAnswer[],
  *   group: string|null,
+ *   stake?: string|null,
  *   onOpenReport: () => void,
  *   onRestart: () => void,
  * }} props
@@ -45,26 +46,31 @@ const FAMILY_SWATCH = {
 export default function CrestArrival({
   answers,
   group,
+  stake = null,
   onOpenReport,
   onRestart,
 }) {
   const [openColour, setOpenColour] = useState(null);
   const [openLeague, setOpenLeague] = useState(null);
-  const options = useMemo(() => ({ group }), [group]);
+  const options = useMemo(() => ({ group, stake }), [group, stake]);
   const summary = useMemo(() => arrivalSummary(answers, DEFAULT_ALPHA, options), [answers, options]);
-  const rows = useMemo(() => colourMap(answers, DEFAULT_ALPHA, { group }), [answers, group]);
-  const leagueRows = useMemo(() => leagueMap(answers, DEFAULT_ALPHA, { group }), [answers, group]);
-  const report = useMemo(() => buildReport({ answers, group, colour: null }, "blend"), [answers, group]);
-  const user = useMemo(() => userVector(answers), [answers]);
+  const rows = useMemo(() => colourMap(answers, DEFAULT_ALPHA, { group, stake }), [answers, group, stake]);
+  const leagueRows = useMemo(() => leagueMap(answers, DEFAULT_ALPHA, { group, stake }), [answers, group, stake]);
+  const report = useMemo(
+    () => buildReport({ answers, group, colour: null, stake }, "blend"),
+    [answers, group, stake],
+  );
+  const user = useMemo(() => userVector(answers, stake), [answers, stake]);
 
-  const { club, score, confident, runnerUp, greenFlags, rub } = summary;
+  const { club, probability, confident, runnerUp, greenFlags, rub } = summary;
+  const roomPct = roomPercent(probability);
   const place = [club.city, club.country].filter(Boolean).join(", ");
   const topName = club.name;
 
   return (
     <section className={styles.arrival}>
       <p className={styles.kicker}>
-        {matchPercent(score) < 80 ? "Closest match" : confident ? "Your club" : "You sit between two"}
+        {roomPct < 80 ? "Closest match" : confident ? "Your club" : "You sit between two"}
       </p>
 
       <div className={styles.arrivalBand} style={{ "--club": club.color || "#D8232A" }}>
@@ -74,7 +80,7 @@ export default function CrestArrival({
           {club.founded ? ` · ${club.founded}` : ""}
           {club.home ? ` · ${club.home}` : ""}
         </p>
-        <p className={styles.arrivalScore}>{matchPercent(score)}% agreement</p>
+        <p className={styles.arrivalScore}>{roomPct}% of the last room</p>
       </div>
 
       {!confident && runnerUp ? (

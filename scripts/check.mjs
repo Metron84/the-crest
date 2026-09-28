@@ -15,9 +15,11 @@ import {
   leagueMap,
   playPool,
 } from "../lib/crest/engine.js";
-import { buildReport, meetPhrase, REPORT_PHRASES } from "../lib/crest/report.js";
+import { buildReport, meetPhrase, REPORT_PHRASES, roomPercent } from "../lib/crest/report.js";
+import { STAKES, isStake, lifeOrder, stakeCoeff, stakeLine } from "../lib/crest/stakes.js";
 
 const SCALE = new Set([-1, -0.6, -0.3, 0, 0.3, 0.6, 1]);
+const dash = /\u2014|\u2013/;
 let failures = 0;
 
 console.log(`clubs: ${CLUBS.length}`);
@@ -128,6 +130,133 @@ if (lifeMiss) {
   console.log(`FAIL funnel: ${lifeMiss} clubs miss their own Life pool`);
 }
 console.log(`funnel: 32 Life patterns all non-empty, own-club Life misses ${lifeMiss}`);
+const bothLife = LIFE_CARDS.map((card) => ({ cardId: card.id, value: 0 }));
+if (playPool(bothLife).length !== CLUBS.length) {
+  failures++;
+  console.log(`FAIL both: all-Both Life pool is ${playPool(bothLife).length}, expected ${CLUBS.length}`);
+}
+const later = CARDS.filter((c) => c.part >= 2).slice(0, 6).map((c) => ({
+  cardId: c.id,
+  value: c.id === 18 ? 0 : 1,
+}));
+const after = playPool([...bothLife, ...later]);
+if (after.length < 3) {
+  failures++;
+  console.log(`FAIL both: meaning Both emptied the play pool (${after.length})`);
+}
+console.log(`both: all-Both Life keeps ${playPool(bothLife).length} clubs`);
+
+console.log("\nstakes");
+const STAKE_IDS = ["belonging", "winning", "belonging_winning", "fame_fortune", "fortune", "love"];
+if (STAKES.map((row) => row.id).join(",") !== STAKE_IDS.join(",")) {
+  failures++;
+  console.log(`FAIL stakes: ids are ${STAKES.map((row) => row.id).join(", ")}`);
+}
+if (isStake("love") !== true || isStake("fame") || isStake(null)) {
+  failures++;
+  console.log("FAIL stakes: isStake gate");
+}
+if (stakeCoeff(null, 7) !== 1 || stakeCoeff("love", 7) !== 2 || stakeCoeff("fortune", 10) !== 2) {
+  failures++;
+  console.log("FAIL stakes: coefficients");
+}
+if (stakeLine("love") !== "You wanted love.") {
+  failures++;
+  console.log(`FAIL stakes: love line is ${stakeLine("love")}`);
+}
+const stakeCopy = STAKES.map((row) => `${row.label} ${row.line} ${stakeLine(row.id)}`).join(" ");
+if (dash.test(stakeCopy)) {
+  failures++;
+  console.log("FAIL stakes: em-dash in chip copy");
+}
+for (const stake of STAKES) {
+  if (stake.coeff.length !== 12) {
+    failures++;
+    console.log(`FAIL stakes: ${stake.id} coeff length ${stake.coeff.length}`);
+  }
+  if (stake.coeff.some((value) => value !== 1 && value !== 1.4 && value !== 2)) {
+    failures++;
+    console.log(`FAIL stakes: ${stake.id} has a coeff outside 1 / 1.4 / 2`);
+  }
+  if (stake.coeff.some((value) => value === 0)) {
+    failures++;
+    console.log(`FAIL stakes: ${stake.id} zeroed a room`);
+  }
+  if ([...stake.life].sort((a, b) => a - b).join(",") !== "1,2,3,4,5") {
+    failures++;
+    console.log(`FAIL stakes: ${stake.id} Life order is not the five Life cards`);
+  }
+  const played = [];
+  for (const id of lifeOrder(stake.id)) {
+    const next = nextCard(played, undefined, { stake: stake.id });
+    if (!next || next.card.id !== id) {
+      failures++;
+      console.log(`FAIL stakes: ${stake.id} expected Life ${id}, got ${next?.card.id}`);
+      break;
+    }
+    played.push({ cardId: id, value: 1 });
+  }
+}
+{
+  const played = [];
+  for (const id of [1, 2, 3, 4, 5]) {
+    const next = nextCard(played);
+    if (!next || next.card.id !== id) {
+      failures++;
+      console.log(`FAIL stakes: default Life expected ${id}, got ${next?.card.id}`);
+      break;
+    }
+    played.push({ cardId: id, value: 1 });
+  }
+}
+if (nextCard([], undefined, { stake: "belonging" })?.card.id !== 3) {
+  failures++;
+  console.log("FAIL stakes: belonging should open on People");
+}
+if (nextCard([], undefined, { stake: "love" })?.card.id !== 1) {
+  failures++;
+  console.log("FAIL stakes: love should open on Fun/Work");
+}
+{
+  const loveLife = lifeOrder("love").map((id) => ({ cardId: id, value: 0 }));
+  const next = nextCard(loveLife, undefined, { stake: "love" });
+  const hot = next ? stakeCoeff("love", next.card.facet) : 0;
+  console.log(`  love first likes: card ${next?.card.id} coeff ${hot}`);
+  if (!next || next.card.part !== 2) {
+    failures++;
+    console.log("FAIL stakes: love after Life did not open Likes");
+  }
+}
+for (const stake of STAKES) {
+  const played = [];
+  for (let i = 0; i < TOTAL; i++) {
+    if (!playPool(played, undefined, { stake: stake.id }).length) {
+      failures++;
+      console.log(`FAIL stakes: ${stake.id} empty pool before card ${i + 1}`);
+      break;
+    }
+    const next = nextCard(played, undefined, { stake: stake.id });
+    if (!next) {
+      failures++;
+      console.log(`FAIL stakes: ${stake.id} nextCard null at ${i}`);
+      break;
+    }
+    const value = i % 3 === 0 ? 0 : i % 2 ? 1 : -1;
+    played.push({ cardId: next.card.id, value });
+  }
+  if (played.length === TOTAL) {
+    const pool = playPool(played, undefined, { stake: stake.id });
+    if (pool.length < 3) {
+      failures++;
+      console.log(`FAIL stakes: ${stake.id} final pool ${pool.length}`);
+    }
+    const row = arrivalSummary(played, undefined, { stake: stake.id });
+    if (roomPercent(row.probability) !== Math.round(Math.max(0, Math.min(1, row.probability)) * 100)) {
+      failures++;
+      console.log(`FAIL stakes: ${stake.id} hero percent is not last-room share`);
+    }
+  }
+}
 
 const toAnswers = (hand) =>
   CARDS.filter((c) => hand[c.id]).map((c) => ({
@@ -281,10 +410,9 @@ if (answers.length === TOTAL) {
 }
 const arrival = arrivalSummary(answers);
 console.log(
-  `\nflow: ${TOTAL} cards -> ${arrival.club.name} (${arrival.score.toFixed(3)}, p=${arrival.probability.toFixed(3)}, ${arrival.confident ? "confident" : "between"})`,
+  `\nflow: ${TOTAL} cards -> ${arrival.club.name} (${arrival.score.toFixed(3)}, p=${arrival.probability.toFixed(3)}, room=${roomPercent(arrival.probability)}%, ${arrival.confident ? "confident" : "between"})`,
 );
 
-const dash = /\u2014|\u2013/;
 const reportHands = {
   romanticLocal: toAnswers(hands.romanticLocal),
   gloryGlobal: toAnswers(hands.gloryGlobal),
@@ -322,7 +450,13 @@ for (const [name, hand] of Object.entries(reportHands)) {
     failures++;
     console.log(`FAIL report ${name}: shared ${sharedKeys} != engine ${expectedShared.join(",")}`);
   }
-  const copy = [blendView.opener, blendView.verdict, blendView.clusterLine, ...blendView.closeBehind.map((c) => c.reason)].join(" ");
+  const copy = [
+    blendView.opener,
+    blendView.verdict,
+    blendView.clusterLine,
+    blendView.stakeLine,
+    ...blendView.closeBehind.map((c) => c.reason),
+  ].join(" ");
   if (dash.test(copy)) {
     failures++;
     console.log(`FAIL report ${name}: em-dash in copy`);
@@ -353,6 +487,15 @@ for (const [name, hand] of Object.entries(reportHands)) {
     failures++;
     console.log(`FAIL report ${name}: no league rows`);
   }
+}
+
+const loveReport = buildReport(
+  { answers: reportHands.romanticLocal, group: null, colour: null, stake: "love" },
+  "blend",
+);
+if (!loveReport || loveReport.stakeLine !== "You wanted love.") {
+  failures++;
+  console.log(`FAIL report: love stake line is ${loveReport?.stakeLine}`);
 }
 
 const meetBalanced = meetPhrase(REPORT_PHRASES[4], 0, 0.3);

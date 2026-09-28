@@ -20,15 +20,16 @@ const VIEW_CAPTION = {
  *   answers: import("@/lib/crest/engine").CrestAnswer[],
  *   group: string|null,
  *   colour: string|null,
+ *   stake?: string|null,
  *   onBack: () => void,
  *   onRestart: () => void,
  * }} props
  */
-export default function CrestReport({ answers, group, colour, onBack, onRestart }) {
+export default function CrestReport({ answers, group, colour, stake = null, onBack, onRestart }) {
   const [view, setView] = useState("blend");
   const [ready, setReady] = useState(false);
   const [copied, setCopied] = useState(false);
-  const result = useMemo(() => ({ answers, group, colour }), [answers, group, colour]);
+  const result = useMemo(() => ({ answers, group, colour, stake }), [answers, group, colour, stake]);
   const blend = useMemo(() => buildReport(result, "blend"), [result]);
   const report = useMemo(() => buildReport(result, view), [result, view]);
 
@@ -85,6 +86,7 @@ export default function CrestReport({ answers, group, colour, onBack, onRestart 
         <p className={`${styles.kicker} ${styles.kickerRed}`}>The full report</p>
         <h1 className={styles.title}>{club.name}</h1>
         {meta ? <p className={styles.meta}>{meta}</p> : null}
+        {blend.stakeLine ? <p className={styles.meta}>{blend.stakeLine}</p> : null}
         <p className={styles.lead}>{blend.opener}</p>
         {blend.voiceLine ? <blockquote className={styles.voice}>{blend.voiceLine}</blockquote> : null}
         <p className={styles.match}>{blend.matchPct}% match</p>

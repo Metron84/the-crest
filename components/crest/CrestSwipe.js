@@ -7,17 +7,19 @@ import SwipeCard from "./SwipeCard";
 import CrestArrival from "./CrestArrival";
 import CrestHome, { readStoredScope, writeStoredScope } from "./CrestHome";
 import CrestReport from "./CrestReport";
+import CrestWant from "./CrestWant";
 import styles from "./CrestSwipe.module.css";
 
 /**
- * The Crest. Standalone play: home, eighteen cards, arrival, report.
- * Answers live in component state for the session only.
+ * The Crest. Standalone play: home, one want, eighteen cards, arrival, report.
+ * Answers and the chip live in component state for the session only.
  *
  * @param {{embedded?: boolean}} [props]
  */
 export default function CrestSwipe({ embedded = false }) {
   const [step, setStep] = useState("scope");
   const [group, setGroup] = useState(null);
+  const [stake, setStake] = useState(null);
   const [answers, setAnswers] = useState([]);
   const [drag, setDrag] = useState(0);
   const boardRef = useRef(null);
@@ -27,8 +29,8 @@ export default function CrestSwipe({ embedded = false }) {
   }, []);
 
   const current = useMemo(
-    () => (step === "play" ? nextCard(answers, DEFAULT_ALPHA, { group }) : null),
-    [answers, group, step],
+    () => (step === "play" ? nextCard(answers, DEFAULT_ALPHA, { group, stake }) : null),
+    [answers, group, stake, step],
   );
 
   const onDrag = useCallback((value) => setDrag(value), []);
@@ -45,12 +47,21 @@ export default function CrestSwipe({ embedded = false }) {
 
   function start() {
     setAnswers([]);
+    setStake(null);
+    setStep("want");
+  }
+
+  function pickStake(id) {
+    setStake(id);
+    setAnswers([]);
+    setDrag(0);
     setStep("play");
   }
 
   function answer(side) {
     if (!current) return;
-    const value = side === "left" ? current.card.leftValue : -current.card.leftValue;
+    const value =
+      side === "both" ? 0 : side === "left" ? current.card.leftValue : -current.card.leftValue;
     const next = [...answers, { cardId: current.card.id, value }];
     setDrag(0);
     setAnswers(next);
@@ -59,7 +70,7 @@ export default function CrestSwipe({ embedded = false }) {
 
   function back() {
     if (answers.length === 0) {
-      setStep("scope");
+      setStep("want");
       return;
     }
     setAnswers(answers.slice(0, -1));
@@ -68,14 +79,15 @@ export default function CrestSwipe({ embedded = false }) {
 
   function restart() {
     setAnswers([]);
+    setStake(null);
     setDrag(0);
     setStep("scope");
   }
 
   function onPlayKey(event) {
-    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight" && event.key !== "ArrowUp") return;
     event.preventDefault();
-    const side = event.key === "ArrowLeft" ? "left" : "right";
+    const side = event.key === "ArrowLeft" ? "left" : event.key === "ArrowRight" ? "right" : "both";
     event.currentTarget.querySelector(`[data-choice="${side}"]`)?.click();
   }
 
@@ -85,6 +97,7 @@ export default function CrestSwipe({ embedded = false }) {
         <CrestReport
           answers={answers}
           group={group}
+          stake={stake}
           colour={null}
           onBack={() => setStep("arrival")}
           onRestart={restart}
@@ -99,11 +112,16 @@ export default function CrestSwipe({ embedded = false }) {
         <CrestArrival
           answers={answers}
           group={group}
+          stake={stake}
           onOpenReport={() => setStep("report")}
           onRestart={restart}
         />
       </div>
     );
+  }
+
+  if (step === "want") {
+    return <CrestWant onPick={pickStake} onBack={() => setStep("scope")} />;
   }
 
   if (step === "scope" || !current) {

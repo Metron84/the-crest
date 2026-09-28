@@ -546,6 +546,43 @@
   transform: rotate(12deg);
 }
 
+.stampBoth {
+  left: 50%;
+  top: 18px;
+  color: var(--cream);
+  background: rgba(10, 17, 31, 0.7);
+  border-color: var(--cream);
+  transform: translateX(-50%) rotate(0deg);
+}
+
+.choiceStack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.choiceBoth {
+  appearance: none;
+  height: 44px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: 1px solid #3a4560;
+  background: transparent;
+  color: #f2ede4;
+  font: inherit;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.choiceBoth:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .choiceRow {
   display: grid;
   grid-template-columns: 1fr 1fr;
