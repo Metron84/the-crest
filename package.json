@@ -9,7 +9,8 @@
     "start": "next start",
     "check": "node scripts/check.mjs",
     "check:crest": "node scripts/check.mjs",
-    "crest:bias": "node scripts/crest-bias.mjs"
+    "crest:bias": "node scripts/crest-bias.mjs",
+    "crest:review": "node scripts/crest-fan-swipe-review.mjs"
   },
   "dependencies": {
     "next": "16.2.10",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { PART_LABEL, TOTAL } from "@/lib/crest/cards";
+import { allowsBoth, PART_LABEL, TOTAL } from "@/lib/crest/cards";
 import { DEFAULT_ALPHA, nextCard } from "@/lib/crest/engine";
 import SwipeCard from "./SwipeCard";
 import CrestArrival from "./CrestArrival";
@@ -60,6 +60,7 @@ export default function CrestSwipe({ embedded = false }) {
 
   function answer(side) {
     if (!current) return;
+    if (side === "both" && !allowsBoth(current.card)) return;
     const value =
       side === "both" ? 0 : side === "left" ? current.card.leftValue : -current.card.leftValue;
     const next = [...answers, { cardId: current.card.id, value }];
@@ -86,6 +87,7 @@ export default function CrestSwipe({ embedded = false }) {
 
   function onPlayKey(event) {
     if (event.key !== "ArrowLeft" && event.key !== "ArrowRight" && event.key !== "ArrowUp") return;
+    if (event.key === "ArrowUp" && current && !allowsBoth(current.card)) return;
     event.preventDefault();
     const side = event.key === "ArrowLeft" ? "left" : event.key === "ArrowRight" ? "right" : "both";
     event.currentTarget.querySelector(`[data-choice="${side}"]`)?.click();

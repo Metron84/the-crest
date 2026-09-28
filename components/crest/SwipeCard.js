@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { allowsBoth } from "@/lib/crest/cards";
 import styles from "./CrestSwipe.module.css";
 
 const COMMIT_PX = 90;
@@ -16,7 +17,7 @@ function labelOf(card, side) {
 
 /**
  * The swipe card. Question lives on the card. Facet names stay off screen.
- * Left, right, or up for Both.
+ * Left or right. Up for Both only when the card allows it.
  *
  * @param {{
  *   card: import("@/lib/crest/cards").CrestCard,
@@ -58,6 +59,8 @@ export default function SwipeCard({ card, index, onAnswer, onDrag }) {
     return () => window.clearTimeout(id);
   }, [index]);
 
+  const bothOk = allowsBoth(card);
+
   function markHintSeen() {
     setHint(false);
     setHintText(false);
@@ -70,6 +73,7 @@ export default function SwipeCard({ card, index, onAnswer, onDrag }) {
 
   function commit(side) {
     if (committed.current) return;
+    if (side === "both" && !bothOk) return;
     committed.current = true;
     markHintSeen();
     setDragging(false);
@@ -117,10 +121,10 @@ export default function SwipeCard({ card, index, onAnswer, onDrag }) {
     setDragging(false);
     const flickLeft = velocityX.current <= -FLICK;
     const flickRight = velocityX.current >= FLICK;
-    const flickUp = velocityY.current <= -FLICK;
+    const flickUp = bothOk && velocityY.current <= -FLICK;
     const absX = Math.abs(dx);
     const absY = Math.abs(dy);
-    if (absY >= absX && dy < 0 && (dy <= -COMMIT_PX || flickUp)) commit("both");
+    if (bothOk && absY >= absX && dy < 0 && (dy <= -COMMIT_PX || flickUp)) commit("both");
     else if (dx <= -COMMIT_PX || flickLeft) commit("left");
     else if (dx >= COMMIT_PX || flickRight) commit("right");
     else {
@@ -131,6 +135,7 @@ export default function SwipeCard({ card, index, onAnswer, onDrag }) {
   }
 
   const stamp = (side) => {
+    if (side === "both" && !bothOk) return 0;
     const travel = side === "left" ? -dx : side === "right" ? dx : -dy;
     if (travel <= STAMP_PX) return 0;
     return Math.min(1, (travel - STAMP_PX) / (COMMIT_PX - STAMP_PX));
@@ -138,7 +143,7 @@ export default function SwipeCard({ card, index, onAnswer, onDrag }) {
 
   const flyX = flying === "left" ? -1.6 : flying === "right" ? 1.6 : 0;
   const flyY = flying === "both" ? -1.4 : 0;
-  const liveY = dragging ? Math.min(0, dy) : 0;
+  const liveY = dragging && bothOk ? Math.min(0, dy) : 0;
   const translate = flying
     ? `translate(${flyX * 100}vw, ${flyY * 100}vh)`
     : `translate(${dx}px, ${liveY}px)`;
@@ -154,7 +159,7 @@ export default function SwipeCard({ card, index, onAnswer, onDrag }) {
 
   const leftHot = dx < -STAMP_PX || flying === "left";
   const rightHot = dx > STAMP_PX || flying === "right";
-  const bothHot = dy < -STAMP_PX || flying === "both";
+  const bothHot = bothOk && (dy < -STAMP_PX || flying === "both");
 
   return (
     <div className={styles.cardWrap}>
@@ -189,21 +194,25 @@ export default function SwipeCard({ card, index, onAnswer, onDrag }) {
         >
           {labelOf(card, "right")}
         </div>
-        <div
-          className={`${styles.stamp} ${styles.stampBoth}`}
-          style={{ opacity: stamp("both") }}
-          aria-hidden="true"
-        >
-          Both
-        </div>
+        {bothOk ? (
+          <div
+            className={`${styles.stamp} ${styles.stampBoth}`}
+            style={{ opacity: stamp("both") }}
+            aria-hidden="true"
+          >
+            Both
+          </div>
+        ) : null}
         <div className={styles.cardPoles} aria-hidden="true">
           <span className={leftHot ? styles.poleHot : rightHot || bothHot ? styles.poleDim : undefined}>
             <ArrowOut left />
             {labelOf(card, "left")}
           </span>
-          <span className={bothHot ? styles.poleHot : leftHot || rightHot ? styles.poleDim : undefined}>
-            Both
-          </span>
+          {bothOk ? (
+            <span className={bothHot ? styles.poleHot : leftHot || rightHot ? styles.poleDim : undefined}>
+              Both
+            </span>
+          ) : null}
           <span className={rightHot ? styles.poleHot : leftHot || bothHot ? styles.poleDim : undefined}>
             {labelOf(card, "right")}
             <ArrowOut />
@@ -216,20 +225,22 @@ export default function SwipeCard({ card, index, onAnswer, onDrag }) {
         className={`${styles.swipeHint} ${hintText ? "" : styles.swipeHintHidden}`}
         aria-hidden={!hintText}
       >
-        <Arrows />
-        Swipe left, right, or up for both
+        <Arrows both={bothOk} />
+        {bothOk ? "Swipe left, right, or up for both" : "Swipe left or right."}
       </p>
 
       <div className={styles.choiceStack}>
-        <button
-          type="button"
-          data-choice="both"
-          className={styles.choiceBoth}
-          onClick={() => commit("both")}
-          disabled={Boolean(flying)}
-        >
-          Both
-        </button>
+        {bothOk ? (
+          <button
+            type="button"
+            data-choice="both"
+            className={styles.choiceBoth}
+            onClick={() => commit("both")}
+            disabled={Boolean(flying)}
+          >
+            Both
+          </button>
+        ) : null}
         <div className={styles.choiceRow}>
           <button
             type="button"
@@ -269,7 +280,15 @@ function ArrowOut({ left = false }) {
   );
 }
 
-function Arrows() {
+function Arrows({ both = true }) {
+  if (!both) {
+    return (
+      <svg width="28" height="12" viewBox="0 0 28 12" fill="none" aria-hidden="true">
+        <path d="M8 2 3 6l5 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        <path d="M20 2 25 6l-5 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      </svg>
+    );
+  }
   return (
     <svg width="36" height="12" viewBox="0 0 36 12" fill="none" aria-hidden="true">
       <path d="M8 2 3 6l5 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />

@@ -110,7 +110,7 @@ export default function CrestArrival({
           <div key={flag.card.id} className={styles.flag}>
             <span className={styles.flagTag}>Shared</span>
             <strong>{flag.card.question}</strong>
-            <span>You both: {flag.clubPhrase}.</span>
+            <span>You and this club: {flag.clubPhrase}.</span>
           </div>
         ))}
         {rub ? (

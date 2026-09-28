@@ -3,7 +3,7 @@
  * Exits non-zero if a club breaks the scoring rules or the recovery
  * test misses its targets.
  */
-import { CARDS, TOTAL } from "../lib/crest/cards.js";
+import { allowsBoth, BINARY_CARD_IDS, CARDS, TOTAL } from "../lib/crest/cards.js";
 import { CLUBS, CREST_GROUPS } from "../lib/crest/clubs.js";
 import { CREST_COMPETITIONS } from "../lib/crest/competitions.js";
 import {
@@ -146,6 +146,26 @@ if (after.length < 3) {
 }
 console.log(`both: all-Both Life keeps ${playPool(bothLife).length} clubs`);
 
+console.log("\nbinary");
+if (BINARY_CARD_IDS.join(",") !== "13,15,17,19,20") {
+  failures++;
+  console.log(`FAIL binary: ids are ${BINARY_CARD_IDS.join(",")}`);
+}
+for (const card of CARDS) {
+  const decision = BINARY_CARD_IDS.includes(card.id);
+  if (allowsBoth(card) === decision) {
+    failures++;
+    console.log(`FAIL binary: card ${card.id} allowBoth=${card.allowBoth}`);
+  }
+}
+const binaryCopy = CARDS.filter((card) => !allowsBoth(card))
+  .map((card) => `${card.question} ${card.context || ""}`)
+  .join(" ");
+if (dash.test(binaryCopy)) {
+  failures++;
+  console.log("FAIL binary: em-dash in a decision card");
+}
+
 console.log("\nstakes");
 const STAKE_IDS = ["belonging", "winning", "belonging_winning", "fame_fortune", "fortune", "love"];
 if (STAKES.map((row) => row.id).join(",") !== STAKE_IDS.join(",")) {
@@ -241,7 +261,8 @@ for (const stake of STAKES) {
       console.log(`FAIL stakes: ${stake.id} nextCard null at ${i}`);
       break;
     }
-    const value = i % 3 === 0 ? 0 : i % 2 ? 1 : -1;
+    const value =
+      !allowsBoth(next.card) || i % 3 !== 0 ? (i % 2 ? 1 : -1) : 0;
     played.push({ cardId: next.card.id, value });
   }
   if (played.length === TOTAL) {
