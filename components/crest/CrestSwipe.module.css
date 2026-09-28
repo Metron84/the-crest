@@ -695,6 +695,10 @@
   background: rgba(216, 35, 42, 0.12);
 }
 
+.leagueRow {
+  grid-template-columns: minmax(7.5em, 12em) 1fr auto;
+}
+
 .colourBest {
   font-weight: 600;
   font-size: 16px;

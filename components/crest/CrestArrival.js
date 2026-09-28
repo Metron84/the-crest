@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { SITE_URL } from "@/lib/config";
-import { DEFAULT_ALPHA, arrivalSummary, colourMap, userVector } from "@/lib/crest/engine";
+import { DEFAULT_ALPHA, arrivalSummary, colourMap, leagueMap, userVector } from "@/lib/crest/engine";
 import { buildReport, closeBehindReason, matchPercent } from "@/lib/crest/report";
 import { crestSignupHref } from "@/lib/crest/signup";
 import styles from "./CrestSwipe.module.css";
@@ -49,9 +49,11 @@ export default function CrestArrival({
   onRestart,
 }) {
   const [openColour, setOpenColour] = useState(null);
+  const [openLeague, setOpenLeague] = useState(null);
   const options = useMemo(() => ({ group }), [group]);
   const summary = useMemo(() => arrivalSummary(answers, DEFAULT_ALPHA, options), [answers, options]);
   const rows = useMemo(() => colourMap(answers, DEFAULT_ALPHA, { group }), [answers, group]);
+  const leagueRows = useMemo(() => leagueMap(answers, DEFAULT_ALPHA, { group }), [answers, group]);
   const report = useMemo(() => buildReport({ answers, group, colour: null }, "blend"), [answers, group]);
   const user = useMemo(() => userVector(answers), [answers]);
 
@@ -130,6 +132,45 @@ export default function CrestArrival({
               >
                 <span className={styles.swatch} style={{ background: FAMILY_SWATCH[row.family] }} />
                 <span className={styles.colourName}>{FAMILY_LABEL[row.family]}</span>
+                <span className={styles.colourBest}>{best.club.name}</span>
+                <span className={styles.colourPct}>{matchPercent(best.score)}%</span>
+              </button>
+              <div className={`${styles.colourExpand} ${open ? styles.colourExpandOpen : ""}`}>
+                <div>
+                  {row.clubs.map((entry, i) => (
+                    <div key={entry.club.slug} className={styles.colourClub}>
+                      <span>{i + 1}</span>
+                      <span>{entry.club.name}</span>
+                      <span>{matchPercent(entry.score)}%</span>
+                      {entry.club.slug === club.slug ? null : (
+                        <small>
+                          {closeBehindReason(user, club, entry.club, DEFAULT_ALPHA, topName)}
+                        </small>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+
+      <h2 className={styles.subhead}>Your club in every league</h2>
+      <p className={styles.hintLeft}>Same swipes. Closest club in each competition.</p>
+      <ul className={styles.colourRows}>
+        {leagueRows.map((row) => {
+          const best = row.clubs[0];
+          const open = openLeague === row.competition;
+          return (
+            <li key={row.competition}>
+              <button
+                type="button"
+                className={`${styles.colourRow} ${styles.leagueRow} ${open ? styles.colourRowActive : ""}`}
+                aria-expanded={open}
+                onClick={() => setOpenLeague(open ? null : row.competition)}
+              >
+                <span className={styles.colourName}>{row.label}</span>
                 <span className={styles.colourBest}>{best.club.name}</span>
                 <span className={styles.colourPct}>{matchPercent(best.score)}%</span>
               </button>

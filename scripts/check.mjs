@@ -5,12 +5,14 @@
  */
 import { CARDS } from "../lib/crest/cards.js";
 import { CLUBS, CREST_GROUPS } from "../lib/crest/clubs.js";
+import { CREST_COMPETITIONS } from "../lib/crest/competitions.js";
 import {
   blend,
   rankClubs,
   nextCard,
   arrivalSummary,
   colourMap,
+  leagueMap,
 } from "../lib/crest/engine.js";
 import { buildReport, meetPhrase, REPORT_PHRASES } from "../lib/crest/report.js";
 
@@ -49,10 +51,28 @@ for (const club of CLUBS) {
   if (ones(club.self) > 5 || ones(club.others) > 5) problems.push("too many poles");
   const diff = club.self.filter((v, i) => v !== club.others[i]).length;
   if (diff < 2 && !club.flags.includes("narrow-gap")) problems.push("self equals others, unflagged");
+  if (club.competition && !CREST_COMPETITIONS.includes(club.competition)) {
+    problems.push(`bad competition ${club.competition}`);
+  }
   if (problems.length) {
     failures++;
     console.log(`FAIL ${club.slug}: ${problems.join(", ")}`);
   }
+}
+
+const competitionCounts = {};
+for (const club of CLUBS) {
+  const key = club.competition || "null";
+  competitionCounts[key] = (competitionCounts[key] || 0) + 1;
+}
+console.log("competitions", Object.entries(competitionCounts).map(([k, v]) => `${k}:${v}`).join(" | "));
+if (competitionCounts["Premier League"] !== 20) {
+  failures++;
+  console.log(`FAIL competitions: Premier League has ${competitionCounts["Premier League"]}, expected 20`);
+}
+if (competitionCounts.Championship !== 20) {
+  failures++;
+  console.log(`FAIL competitions: Championship has ${competitionCounts.Championship}, expected 20`);
 }
 
 const toAnswers = (hand) =>
@@ -164,6 +184,21 @@ if (colourHits.n && colourShare < 0.6) {
   console.log("FAIL colour map: own-colour row top 3 under 60%");
 }
 
+const leagueProbe = leagueMap(toAnswers(hands.romanticLocal));
+if (!leagueProbe.length) {
+  failures++;
+  console.log("FAIL league map: no rows");
+}
+const englandProbe = leagueMap(toAnswers(hands.romanticLocal), undefined, { group: "England" });
+if (englandProbe.some((row) => row.competition === "Serie A" || row.competition === "LaLiga")) {
+  failures++;
+  console.log("FAIL league map: England scope leaked another country");
+}
+if (!englandProbe.some((row) => row.competition === "Premier League")) {
+  failures++;
+  console.log("FAIL league map: England scope missing Premier League");
+}
+
 const answers = [];
 for (let i = 0; i < 20; i++) {
   const next = nextCard(answers);
@@ -227,14 +262,26 @@ for (const [name, hand] of Object.entries(reportHands)) {
     console.log(`FAIL report ${name}: raw facet key in copy`);
   }
   const england = buildReport({ answers: hand, group: "England", colour: null }, "blend");
-  if (england.leagues.length !== 1 || england.leagues[0].group !== "England") {
+  const englandComps = england.leagues.map((row) => row.group);
+  if (englandComps.includes("Serie A") || englandComps.includes("LaLiga")) {
     failures++;
-    console.log(`FAIL report ${name}: scope should be England only`);
+    console.log(`FAIL report ${name}: England scope leaked another country`);
   }
-  const leagueOrder = blendView.leagues.map((row) => row.group).join(",");
-  if (leagueOrder !== CREST_GROUPS.join(",")) {
+  if (!englandComps.includes("Premier League") || !englandComps.includes("Championship")) {
     failures++;
-    console.log(`FAIL report ${name}: league order ${leagueOrder}`);
+    console.log(`FAIL report ${name}: England scope missing Premier League or Championship`);
+  }
+  const seenComp = new Set();
+  for (const row of blendView.leagues) {
+    if (seenComp.has(row.group)) {
+      failures++;
+      console.log(`FAIL report ${name}: duplicate competition ${row.group}`);
+    }
+    seenComp.add(row.group);
+  }
+  if (!blendView.leagues.length) {
+    failures++;
+    console.log(`FAIL report ${name}: no league rows`);
   }
 }
 

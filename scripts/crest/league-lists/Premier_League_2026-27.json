@@ -1,0 +1,26 @@
+[
+  { "name": "Arsenal", "common_name": "Arsenal", "city": "", "country": "", "founded": 0 },
+  { "name": "Aston Villa", "common_name": "Aston Villa", "city": "", "country": "", "founded": 0 },
+  { "name": "AFC Bournemouth", "common_name": "Bournemouth", "city": "", "country": "", "founded": 0 },
+  { "name": "Brentford", "common_name": "Brentford", "city": "", "country": "", "founded": 0 },
+  { "name": "Brighton & Hove Albion", "common_name": "Brighton & Hove Albion", "city": "", "country": "", "founded": 0 },
+  { "name": "Chelsea", "common_name": "Chelsea", "city": "", "country": "", "founded": 0 },
+  { "name": "Coventry City", "common_name": "Coventry City", "city": "", "country": "", "founded": 0 },
+  { "name": "Crystal Palace", "common_name": "Crystal Palace", "city": "", "country": "", "founded": 0 },
+  { "name": "Everton", "common_name": "Everton", "city": "", "country": "", "founded": 0 },
+  { "name": "Fulham", "common_name": "Fulham", "city": "", "country": "", "founded": 0 },
+  { "name": "Hull City", "common_name": "Hull City", "city": "", "country": "", "founded": 0 },
+  { "name": "Ipswich Town", "common_name": "Ipswich Town", "city": "", "country": "", "founded": 0 },
+  { "name": "Leeds United", "common_name": "Leeds United", "city": "", "country": "", "founded": 0 },
+  { "name": "Liverpool", "common_name": "Liverpool", "city": "", "country": "", "founded": 0 },
+  { "name": "Manchester City", "common_name": "Manchester City", "city": "", "country": "", "founded": 0 },
+  { "name": "Manchester United", "common_name": "Manchester United", "city": "", "country": "", "founded": 0 },
+  { "name": "Newcastle United", "common_name": "Newcastle United", "city": "", "country": "", "founded": 0 },
+  { "name": "Nottingham Forest", "common_name": "Nottingham Forest", "city": "", "country": "", "founded": 0 },
+  { "name": "Sunderland", "common_name": "Sunderland", "city": "", "country": "", "founded": 0 },
+  { "name": "Tottenham Hotspur", "common_name": "Tottenham Hotspur", "city": "", "country": "", "founded": 0 },
+  {
+    "source": "https://en.wikipedia.org/wiki/2026%E2%80%9327_Premier_League",
+    "as_of": "2026-09-28"
+  }
+]
