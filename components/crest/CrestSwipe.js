@@ -1,21 +1,14 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { PART_LABEL, TOTAL } from "@/lib/crest/cards";
-import { CLUBS, CREST_GROUPS } from "@/lib/crest/clubs";
 import { DEFAULT_ALPHA, nextCard } from "@/lib/crest/engine";
 import SwipeCard from "./SwipeCard";
 import CrestArrival from "./CrestArrival";
+import CrestHome, { readStoredScope, writeStoredScope } from "./CrestHome";
+import CrestReport from "./CrestReport";
 import styles from "./CrestSwipe.module.css";
-
-const GROUP_LABEL = {
-  England: "England",
-  Germany: "Germany",
-  France: "France",
-  Spain: "Spain",
-  "Rest of the World": "Rest of the world",
-};
 
 /**
  * The Crest. Pick where to look, swipe twenty cards, arrive at a club.
@@ -28,13 +21,12 @@ const GROUP_LABEL = {
 export default function CrestSwipe({ embedded = false }) {
   const [step, setStep] = useState("scope");
   const [group, setGroup] = useState(null);
+  const [colour, setColour] = useState(null);
   const [answers, setAnswers] = useState([]);
   const [drag, setDrag] = useState(0);
 
-  const counts = useMemo(() => {
-    const map = { all: CLUBS.length };
-    for (const g of CREST_GROUPS) map[g] = CLUBS.filter((c) => c.group === g).length;
-    return map;
+  useEffect(() => {
+    setGroup(readStoredScope());
   }, []);
 
   const current = useMemo(
@@ -44,8 +36,13 @@ export default function CrestSwipe({ embedded = false }) {
 
   const onDrag = useCallback((value) => setDrag(value), []);
 
-  function begin(selected) {
-    setGroup(selected);
+  function setScope(next) {
+    setGroup(next);
+    writeStoredScope(next);
+  }
+
+  function start() {
+    setColour(null);
     setAnswers([]);
     setStep("play");
   }
@@ -70,14 +67,37 @@ export default function CrestSwipe({ embedded = false }) {
 
   function restart() {
     setAnswers([]);
+    setColour(null);
     setDrag(0);
     setStep("scope");
+  }
+
+  if (step === "report") {
+    return (
+      <div className={styles.board}>
+        <CrestReport
+          answers={answers}
+          group={group}
+          colour={colour}
+          onBack={() => setStep("arrival")}
+          onRestart={restart}
+        />
+        {embedded ? null : <TabBar />}
+      </div>
+    );
   }
 
   if (step === "arrival") {
     return (
       <div className={styles.board}>
-        <CrestArrival answers={answers} group={group} onRestart={restart} />
+        <CrestArrival
+          answers={answers}
+          group={group}
+          colour={colour}
+          onColour={setColour}
+          onOpenReport={() => setStep("report")}
+          onRestart={restart}
+        />
         {embedded ? null : <TabBar />}
       </div>
     );
@@ -85,42 +105,19 @@ export default function CrestSwipe({ embedded = false }) {
 
   if (step === "scope" || !current) {
     return (
-      <div className={styles.board}>
-        <header className={styles.topbar}>
-          <Link href="/games" className={styles.iconButton} aria-label="Back to games">
-            &larr;
-          </Link>
-          <span className={styles.topbarTitle}>The Crest</span>
-          <span className={styles.iconButton} aria-hidden="true" />
-        </header>
-
-        <section className={styles.scope}>
-          <p className={styles.kicker}>Twenty cards. One club.</p>
-          <h1 className={styles.question}>Where should we look for your club?</h1>
-          <p className={styles.hint}>
-            Every club is scored on how it sees itself and how the game sees it. Your swipes
-            find the one that sounds like you.
-          </p>
-          <div className={styles.scopeGrid}>
-            <button type="button" className={styles.scopeButton} onClick={() => begin(null)}>
-              <span>Everywhere</span>
-              <small>{counts.all} clubs</small>
-            </button>
-            {CREST_GROUPS.map((g) => (
-              <button
-                key={g}
-                type="button"
-                className={styles.scopeButton}
-                onClick={() => begin(g)}
-              >
-                <span>{GROUP_LABEL[g]}</span>
-                <small>{counts[g]} clubs</small>
-              </button>
-            ))}
+      <>
+        <CrestHome
+          group={group}
+          onScope={setScope}
+          onStart={start}
+          backHref={embedded ? "/games" : null}
+        />
+        {embedded ? null : (
+          <div className={styles.board}>
+            <TabBar />
           </div>
-        </section>
-        {embedded ? null : <TabBar />}
-      </div>
+        )}
+      </>
     );
   }
 

@@ -65,12 +65,13 @@ There is no colour question in the flow. Colour is an output on the result scree
 - `nextCard(answers, alpha, { group })`: the next card to show.
 - `arrivalSummary`: the top club, whether it is clearly ahead (1.5 times the runner-up), the two answers that counted most for it, and the one that counted most against it.
 - `colourMap`: three closest clubs per colour family, for the result screen. White is not a family.
+- `buildReport` in `lib/crest/report.js`: names why the top club won. Shared and The rub come from the engine flags. Italy is its own group.
 
 `npm run check` runs the rule checks and a recovery test: 30 simulated fans per club answering from that club's own vector plus noise.
 
 ### Database
 
-184 clubs: England 64 (including Cardiff), Germany 36, France 21, Spain 25, Rest of the World 38 (Italy, Netherlands, Scotland, Greece, Croatia, Czechia, Turkey). Vectors were scored from dual-voice research files, one club at a time, and checked for scale, pole caps, self/others separation, near-duplicates and behaviour on fixed test hands. Do not hand-edit vectors; re-score from the files.
+184 clubs: England 64 (including Cardiff), Germany 36, Italy 26, Spain 25, France 21, Rest of the World 12 (Netherlands, Scotland, Greece, Croatia, Czechia, Turkey). Vectors were scored from dual-voice research files, one club at a time, and checked for scale, pole caps, self/others separation, near-duplicates and behaviour on fixed test hands. Do not hand-edit vectors; re-score from the files.
 
 `founded` is null where the file did not carry it. `color` is a display hint derived from the named colours, not an official brand hex.
 
@@ -78,9 +79,11 @@ There is no colour question in the flow. Colour is an output on the result scree
 
 `components/crest/`:
 
-- `CrestSwipe.js`: scope picker, play screen, progress, tab bar.
+- `CrestHome.js`: opening screen, sample card, and the league bottom sheet.
+- `CrestSwipe.js`: play screen, progress, and the journey between home, cards, arrival and report.
 - `SwipeCard.js`: the draggable card. Drag, tap a side, or use the arrow keys.
-- `CrestArrival.js`: your club (or "you sit between X and Y"), both lines, shared answers, the rub, same-blood cluster, a colour map you can tap to re-rank, closest in each league, and a rival-eyes toggle.
+- `CrestArrival.js`: your club (or "you sit between X and Y"), both lines, shared answers, the rub, a colour map you can tap to re-rank, and a door into the report.
+- `CrestReport.js`: why this club, Heart/Mind/Soul tracks, two voices, leagues, and close behind.
 
 Cards currently use typographic placeholder artwork. Each card is meant to carry its own still.
 

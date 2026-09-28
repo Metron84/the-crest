@@ -1,4 +1,4 @@
-import { Bodoni_Moda, Archivo } from "next/font/google";
+import { Bodoni_Moda, Archivo, Montserrat } from "next/font/google";
 import "./globals.css";
 
 const bodoni = Bodoni_Moda({
@@ -10,6 +10,12 @@ const archivo = Archivo({
   variable: "--font-archivo",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
+});
+
+const montserrat = Montserrat({
+  variable: "--font-crest-head",
+  subsets: ["latin"],
+  weight: ["700"],
 });
 
 export const metadata = {
@@ -28,7 +34,7 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${bodoni.variable} ${archivo.variable}`}>
+    <html lang="en" className={`${bodoni.variable} ${archivo.variable} ${montserrat.variable}`}>
       <body>{children}</body>
     </html>
   );

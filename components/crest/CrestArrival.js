@@ -1,25 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
-import { CREST_GROUPS } from "@/lib/crest/clubs";
-import {
-  DEFAULT_ALPHA,
-  RIVAL_ALPHA,
-  arrivalSummary,
-  cluster,
-  colourMap,
-  rankClubs,
-} from "@/lib/crest/engine";
+import { DEFAULT_ALPHA, arrivalSummary, colourMap } from "@/lib/crest/engine";
+import { buildReport, matchPercent } from "@/lib/crest/report";
 import styles from "./CrestSwipe.module.css";
-
-const GROUP_LABEL = {
-  England: "England",
-  Germany: "Germany",
-  France: "France",
-  Spain: "Spain",
-  "Rest of the World": "Rest of the world",
-};
 
 const FAMILY_LABEL = {
   red: "red",
@@ -48,41 +33,29 @@ const FAMILY_SWATCH = {
 };
 
 /**
- * Whole-percent fit for display. Engine `score` is the geometric-mean
- * per-weight probability of the answers: 50 is coin-flip, 100 is a perfect
- * match. Mapping coin-flip to 0 made mixed hands look empty.
- *
- * @param {number} score
- */
-function percent(score) {
-  return Math.round(Math.max(0, Math.min(1, score)) * 100);
-}
-
-/**
  * @param {{
  *   answers: import("@/lib/crest/engine").CrestAnswer[],
  *   group: string|null,
+ *   colour: string|null,
+ *   onColour: (family: string|null) => void,
+ *   onOpenReport: () => void,
  *   onRestart: () => void,
  * }} props
  */
-export default function CrestArrival({ answers, group, onRestart }) {
-  const [colour, setColour] = useState(null);
-  const [rivalEyes, setRivalEyes] = useState(false);
-  const alpha = rivalEyes ? RIVAL_ALPHA : DEFAULT_ALPHA;
+export default function CrestArrival({
+  answers,
+  group,
+  colour,
+  onColour,
+  onOpenReport,
+  onRestart,
+}) {
   const options = useMemo(() => ({ group, colour }), [group, colour]);
+  const summary = useMemo(() => arrivalSummary(answers, DEFAULT_ALPHA, options), [answers, options]);
+  const rows = useMemo(() => colourMap(answers, DEFAULT_ALPHA, { group }), [answers, group]);
+  const report = useMemo(() => buildReport({ answers, group, colour }, "blend"), [answers, group, colour]);
 
-  const summary = useMemo(() => arrivalSummary(answers, alpha, options), [answers, alpha, options]);
-  const blood = useMemo(() => cluster(summary.ranked).slice(0, 4), [summary]);
-  const rows = useMemo(() => colourMap(answers, alpha, { group }), [answers, alpha, group]);
-  const perGroup = useMemo(
-    () =>
-      group
-        ? []
-        : CREST_GROUPS.map((g) => ({ group: g, best: rankClubs(answers, alpha, { group: g, colour })[0] })),
-    [answers, alpha, group, colour],
-  );
-
-  const { club, score, confident, runnerUp, greenFlags, rub, ranked } = summary;
+  const { club, score, confident, runnerUp, greenFlags, rub } = summary;
   const place = [club.city, club.country].filter(Boolean).join(", ");
 
   return (
@@ -97,9 +70,8 @@ export default function CrestArrival({ answers, group, onRestart }) {
           {club.home ? ` · ${club.home}` : ""}
         </p>
         <p className={styles.arrivalScore}>
-          {percent(score)}% agreement
+          {matchPercent(score)}% agreement
           {colour ? ` · wearing ${FAMILY_LABEL[colour]}` : ""}
-          {rivalEyes ? " · through rival eyes" : ""}
         </p>
       </div>
 
@@ -144,12 +116,6 @@ export default function CrestArrival({ answers, group, onRestart }) {
         ) : null}
       </div>
 
-      {blood.length > 1 ? (
-        <p className={styles.blood}>
-          Same blood: {blood.map((c) => c.name).join(", ")}.
-        </p>
-      ) : null}
-
       <h2 className={styles.subhead}>If you bleed a colour</h2>
       <p className={styles.hintLeft}>
         Values cannot always split clubs of the same blood. Colour can. Tap a colour to re-rank.
@@ -160,7 +126,7 @@ export default function CrestArrival({ answers, group, onRestart }) {
             <button
               type="button"
               className={`${styles.colourRow} ${colour === row.family ? styles.colourRowActive : ""}`}
-              onClick={() => setColour(colour === row.family ? null : row.family)}
+              onClick={() => onColour(colour === row.family ? null : row.family)}
               aria-pressed={colour === row.family}
             >
               <span className={styles.swatch} style={{ background: FAMILY_SWATCH[row.family] }} />
@@ -171,52 +137,45 @@ export default function CrestArrival({ answers, group, onRestart }) {
         ))}
       </ul>
 
-      <h2 className={styles.subhead}>Close behind</h2>
-      <ol className={styles.ranking}>
-        {ranked.slice(1, 6).map(({ club: c, score: s }) => (
-          <li key={c.slug}>
-            <span className={styles.rankDot} style={{ background: c.color || "#F2EDE4" }} />
-            <span className={styles.rankName}>{c.name}</span>
-            <span className={styles.rankPct}>{percent(s)}%</span>
-          </li>
-        ))}
-      </ol>
-
-      {perGroup.length ? (
-        <>
-          <h2 className={styles.subhead}>Closest in each league</h2>
-          <ul className={styles.groups}>
-            {perGroup.map(({ group: g, best }) => (
-              <li key={g}>
-                <span className={styles.groupName}>{GROUP_LABEL[g]}</span>
-                <span className={styles.rankName}>{best.club.name}</span>
-                <span className={styles.rankPct}>{percent(best.score)}%</span>
-              </li>
-            ))}
-          </ul>
-        </>
+      {report ? (
+        <div className={styles.reportCard}>
+          <p className={styles.reportKicker}>The report</p>
+          <h2 className={styles.reportTitle}>Why this club, and where you part.</h2>
+          <p className={styles.reportOpener}>{report.opener}</p>
+          <button type="button" className={styles.reportButton} onClick={onOpenReport}>
+            Read the full report
+            <ArrowRight />
+          </button>
+        </div>
       ) : null}
 
-      <button
-        type="button"
-        className={`${styles.toggle} ${rivalEyes ? styles.toggleOn : ""}`}
-        onClick={() => setRivalEyes(!rivalEyes)}
-        aria-pressed={rivalEyes}
-      >
-        {rivalEyes ? "Back to the club's own voice" : "See your match through rival eyes"}
-      </button>
-
       <div className={styles.next}>
-        <button type="button" className={styles.primary} onClick={onRestart}>
+        <button type="button" className={styles.again} onClick={onRestart}>
           Swipe again
         </button>
-        <Link href="/guesser" className={styles.secondary}>
-          Play The Guesser
-        </Link>
-        <Link href="/films" className={styles.secondary}>
-          Watch the films
-        </Link>
+        <div className={styles.nextPair}>
+          <Link href="/guesser" className={styles.nextGhost}>
+            Play The Guesser
+          </Link>
+          <Link href="/films" className={styles.nextGhost}>
+            Watch the films
+          </Link>
+        </div>
       </div>
     </section>
+  );
+}
+
+function ArrowRight() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+      <path
+        d="M7 3.5 12.5 9 7 14.5"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }

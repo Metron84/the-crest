@@ -4,7 +4,7 @@
  * test misses its targets.
  */
 import { CARDS } from "../lib/crest/cards.js";
-import { CLUBS } from "../lib/crest/clubs.js";
+import { CLUBS, CREST_GROUPS } from "../lib/crest/clubs.js";
 import {
   blend,
   rankClubs,
@@ -12,11 +12,35 @@ import {
   arrivalSummary,
   colourMap,
 } from "../lib/crest/engine.js";
+import { buildReport, meetPhrase, REPORT_PHRASES } from "../lib/crest/report.js";
 
 const SCALE = new Set([-1, -0.6, -0.3, 0, 0.3, 0.6, 1]);
 let failures = 0;
 
 console.log(`clubs: ${CLUBS.length}`);
+const GROUP_COUNTS = {
+  England: 64,
+  Germany: 36,
+  Italy: 26,
+  Spain: 25,
+  France: 21,
+  "Rest of the World": 12,
+};
+if (CREST_GROUPS.join(",") !== "England,Germany,Italy,Spain,France,Rest of the World") {
+  failures++;
+  console.log(`FAIL groups: order is ${CREST_GROUPS.join(", ")}`);
+}
+for (const g of CREST_GROUPS) {
+  const n = CLUBS.filter((c) => c.group === g).length;
+  if (n !== GROUP_COUNTS[g]) {
+    failures++;
+    console.log(`FAIL groups: ${g} has ${n}, expected ${GROUP_COUNTS[g]}`);
+  }
+}
+if (CLUBS.some((c) => c.country === "Italy" && c.group !== "Italy")) {
+  failures++;
+  console.log("FAIL groups: an Italian club is not in Italy");
+}
 for (const club of CLUBS) {
   const problems = [];
   if (club.self.length !== 12 || club.others.length !== 12) problems.push("length");
@@ -154,6 +178,71 @@ const arrival = arrivalSummary(answers);
 console.log(
   `\nflow: 20 cards -> ${arrival.club.name} (${arrival.score.toFixed(3)}, p=${arrival.probability.toFixed(3)}, ${arrival.confident ? "confident" : "between"})`,
 );
+
+const dash = /\u2014|\u2013/;
+const reportHands = {
+  romanticLocal: toAnswers(hands.romanticLocal),
+  gloryGlobal: toAnswers(hands.gloryGlobal),
+};
+console.log("\nreport");
+for (const [name, hand] of Object.entries(reportHands)) {
+  const blendView = buildReport({ answers: hand, group: null, colour: null }, "blend");
+  const selfView = buildReport({ answers: hand, group: null, colour: null }, "self");
+  const othersView = buildReport({ answers: hand, group: null, colour: null }, "others");
+  const flags = arrivalSummary(hand);
+  const sharedKeys = blendView.shared.map((f) => f.id).join(",");
+  const facetKeys = [
+    "winning-vs-enduring",
+    "emotional-climate",
+    "openness",
+    "what-gives-meaning",
+    "style",
+    "risk",
+    "talent",
+    "philosophy",
+    "reach",
+    "time",
+    "power",
+    "purpose",
+  ];
+  const expectedShared = flags.greenFlags.map((flag) => REPORT_PHRASES[facetKeys.indexOf(flag.facet.key)].id);
+  console.log(
+    `  ${name.padEnd(22)} ${blendView.club.name} ${blendView.matchPct}% shared=${sharedKeys}`,
+  );
+  if (selfView.club.id !== blendView.club.id || othersView.club.id !== blendView.club.id) {
+    failures++;
+    console.log(`FAIL report ${name}: view re-ranked the club`);
+  }
+  if (expectedShared.join(",") !== sharedKeys) {
+    failures++;
+    console.log(`FAIL report ${name}: shared ${sharedKeys} != engine ${expectedShared.join(",")}`);
+  }
+  const copy = [blendView.opener, blendView.verdict, blendView.clusterLine, ...blendView.closeBehind.map((c) => c.reason)].join(" ");
+  if (dash.test(copy)) {
+    failures++;
+    console.log(`FAIL report ${name}: em-dash in copy`);
+  }
+  if (facetKeys.filter((key) => key.includes("-")).some((key) => copy.includes(key))) {
+    failures++;
+    console.log(`FAIL report ${name}: raw facet key in copy`);
+  }
+  const england = buildReport({ answers: hand, group: "England", colour: null }, "blend");
+  if (england.leagues.length !== 1 || england.leagues[0].group !== "England") {
+    failures++;
+    console.log(`FAIL report ${name}: scope should be England only`);
+  }
+  const leagueOrder = blendView.leagues.map((row) => row.group).join(",");
+  if (leagueOrder !== CREST_GROUPS.join(",")) {
+    failures++;
+    console.log(`FAIL report ${name}: league order ${leagueOrder}`);
+  }
+}
+
+const meetBalanced = meetPhrase(REPORT_PHRASES[4], 0, 0.3);
+if (meetBalanced !== "how the game should look" && meetBalanced !== "results") {
+  failures++;
+  console.log(`FAIL meetPhrase balanced user: ${meetBalanced}`);
+}
 
 if (failures) {
   console.log(`\n${failures} check(s) failed`);
