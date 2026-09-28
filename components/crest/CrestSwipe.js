@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { PART_LABEL, TOTAL } from "@/lib/crest/cards";
 import { CLUBS, CREST_GROUPS } from "@/lib/crest/clubs";
-import { nextCard } from "@/lib/crest/engine";
+import { DEFAULT_ALPHA, nextCard } from "@/lib/crest/engine";
 import SwipeCard from "./SwipeCard";
 import CrestArrival from "./CrestArrival";
 import styles from "./CrestSwipe.module.css";
@@ -20,8 +20,12 @@ const GROUP_LABEL = {
 /**
  * The Crest. Pick where to look, swipe twenty cards, arrive at a club.
  * Answers live in component state for the session only.
+ * On the TRF site the chrome already has a header and footer, so the
+ * in-game tab bar is hidden (`embedded`).
+ *
+ * @param {{embedded?: boolean}} [props]
  */
-export default function CrestSwipe() {
+export default function CrestSwipe({ embedded = false }) {
   const [step, setStep] = useState("scope");
   const [group, setGroup] = useState(null);
   const [answers, setAnswers] = useState([]);
@@ -34,7 +38,7 @@ export default function CrestSwipe() {
   }, []);
 
   const current = useMemo(
-    () => (step === "play" ? nextCard(answers, 0.6, { group }) : null),
+    () => (step === "play" ? nextCard(answers, DEFAULT_ALPHA, { group }) : null),
     [answers, group, step],
   );
 
@@ -74,7 +78,7 @@ export default function CrestSwipe() {
     return (
       <div className={styles.board}>
         <CrestArrival answers={answers} group={group} onRestart={restart} />
-        <TabBar />
+        {embedded ? null : <TabBar />}
       </div>
     );
   }
@@ -83,7 +87,7 @@ export default function CrestSwipe() {
     return (
       <div className={styles.board}>
         <header className={styles.topbar}>
-          <Link href="https://thereflectivefootball.com/games" className={styles.iconButton} aria-label="Back to games">
+          <Link href="/games" className={styles.iconButton} aria-label="Back to games">
             &larr;
           </Link>
           <span className={styles.topbarTitle}>The Crest</span>
@@ -115,7 +119,7 @@ export default function CrestSwipe() {
             ))}
           </div>
         </section>
-        <TabBar />
+        {embedded ? null : <TabBar />}
       </div>
     );
   }
@@ -180,7 +184,7 @@ export default function CrestSwipe() {
           Card {index + 1} of {TOTAL}
         </span>
       </footer>
-      <TabBar />
+      {embedded ? null : <TabBar />}
     </div>
   );
 }
@@ -188,9 +192,9 @@ export default function CrestSwipe() {
 function TabBar() {
   return (
     <nav className={styles.tabbar} aria-label="Site">
-      <Link href="https://thereflectivefootball.com">Home</Link>
-      <Link href="https://thereflectivefootball.com/games">Games</Link>
-      <Link href="https://thereflectivefootball.com/account">Account</Link>
+      <Link href="/">Home</Link>
+      <Link href="/games">Games</Link>
+      <Link href="/account">Account</Link>
     </nav>
   );
 }

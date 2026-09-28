@@ -17,7 +17,7 @@
   background: radial-gradient(120% 80% at 50% 0%, #142038 0%, var(--navy) 55%, var(--navy-deep) 100%);
   color: var(--cream);
   font-family: var(--font-body);
-  overflow: clip;
+  overflow: visible;
   touch-action: pan-y;
 }
 
@@ -537,7 +537,7 @@
   z-index: 1;
   width: min(100%, 560px);
   margin: 0 auto;
-  padding: 28px 0 24px;
+  padding: 28px 0 48px;
 }
 
 .arrivalBand {
@@ -566,6 +566,109 @@
   font-size: clamp(2.2rem, 9vw, 3.4rem);
   line-height: 1;
   letter-spacing: -0.01em;
+}
+
+.arrivalBand + .arrivalBand {
+  margin-top: 10px;
+  padding-top: 16px;
+  padding-bottom: 14px;
+}
+
+.arrivalNameSecond {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.6rem, 6.5vw, 2.4rem);
+  line-height: 1;
+}
+
+.blood {
+  margin: 18px 0 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.hintLeft {
+  margin: -4px 0 12px;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.colourRows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.colourRow {
+  appearance: none;
+  display: grid;
+  grid-template-columns: 14px 5.5em 1fr;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--edge);
+  background: rgba(242, 237, 228, 0.04);
+  color: var(--cream);
+  font: inherit;
+  font-size: 0.92rem;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease;
+}
+
+.colourRow:hover,
+.colourRow:focus-visible {
+  border-color: rgba(242, 237, 228, 0.4);
+  outline: none;
+}
+
+.colourRowActive {
+  border-color: var(--red);
+  background: rgba(216, 35, 42, 0.12);
+}
+
+.swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(242, 237, 228, 0.35);
+}
+
+.colourName {
+  font-size: 0.74rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.colourClubs {
+  font-weight: 600;
+}
+
+.toggle {
+  appearance: none;
+  display: block;
+  width: 100%;
+  margin-top: 26px;
+  padding: 13px 16px;
+  border-radius: 12px;
+  border: 1px dashed rgba(242, 237, 228, 0.35);
+  background: transparent;
+  color: var(--cream);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.toggleOn {
+  border-style: solid;
+  border-color: var(--red);
 }
 
 .arrivalMeta {

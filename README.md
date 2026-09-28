@@ -53,16 +53,20 @@ Per-facet evidence notes for every club live in `data/crest/club-notes.json`.
 
 ### Twenty cards
 
-`lib/crest/cards.js` holds the deck. Part 1 (7 personality cards, weight 0.5) comes in a fixed order. Parts 2 (likes and dislikes, weight 0.75) and 3 (football situations, weight 1) are adaptive: the engine picks the unused card that best separates your six closest clubs.
+`lib/crest/cards.js` holds the deck. Part 1 (7 personality cards, weight 0.5) comes in a fixed order. Parts 2 (likes and dislikes, weight 0.75) and 3 (football situations, weight 1) are adaptive: the engine picks the unused card with the highest expected information gain over the club probabilities.
+
+There is no colour question in the flow. Colour is an output on the result screen.
 
 ### Scoring
 
-`lib/crest/engine.js`:
+`lib/crest/engine.js` treats each swipe as evidence, not as a term in an average. A club's score is the log-likelihood of the answers given that club's blended values. A club sitting strongly on the wrong side of one answer pays for it. A club sitting mildly on the right side of everything does not win by default. Thin-file clubs (confidence 0.6) get a flatter likelihood rather than values pulled toward zero.
 
-- `userVector(answers)`: weighted mean of your swipes per facet.
-- `rankClubs(answers, alpha, { group })`: score is the weighted mean of `1 - |you - club| / 2` over answered facets, pulled slightly toward neutral for low-confidence clubs. `group` limits the field to England, Germany, France, Spain or Rest of the World.
+- `rankClubs(answers, alpha, { group, colour })`: most likely first. `probability` is the softmax over the pool. `colour` filters the pool to that family (used when you tap a colour row).
 - `nextCard(answers, alpha, { group })`: the next card to show.
-- `arrivalSummary(answers, alpha, { group })`: the winning club, the two facets you share most closely and the one where you differ most.
+- `arrivalSummary`: the top club, whether it is clearly ahead (1.5 times the runner-up), the two answers that counted most for it, and the one that counted most against it.
+- `colourMap`: three closest clubs per colour family, for the result screen. White is not a family.
+
+`npm run check` runs the rule checks and a recovery test: 30 simulated fans per club answering from that club's own vector plus noise.
 
 ### Database
 
@@ -76,7 +80,7 @@ Per-facet evidence notes for every club live in `data/crest/club-notes.json`.
 
 - `CrestSwipe.js`: scope picker, play screen, progress, tab bar.
 - `SwipeCard.js`: the draggable card. Drag, tap a side, or use the arrow keys.
-- `CrestArrival.js`: your club, both lines, shared facets, the rub, the clubs close behind, and the closest club in each league.
+- `CrestArrival.js`: your club (or "you sit between X and Y"), both lines, shared answers, the rub, same-blood cluster, a colour map you can tap to re-rank, closest in each league, and a rival-eyes toggle.
 
 Cards currently use typographic placeholder artwork. Each card is meant to carry its own still.
 
