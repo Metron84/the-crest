@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { SITE_URL } from "@/lib/config";
 import { buildReport, trait, REPORT_PHRASES } from "@/lib/crest/report";
 import { crestSignupHref } from "@/lib/crest/signup";
@@ -185,15 +184,23 @@ export default function CrestReport({ answers, group, colour, stake = null, onBa
         <button type="button" className={styles.share} onClick={share}>
           {copied ? "Link copied" : "Share my crest"}
         </button>
-        <Link href={crestSignupHref(club.id)} className={styles.ghost}>
+        <button
+          type="button"
+          className={styles.ghost}
+          onClick={() => window.location.assign(crestSignupHref(club.slug))}
+        >
           Join The Reflective Football
-        </Link>
+        </button>
         <button type="button" className={styles.outline} onClick={onRestart}>
           Swipe again
         </button>
-        <Link href={`${SITE_URL}/films`} className={styles.ghost}>
+        <button
+          type="button"
+          className={styles.ghost}
+          onClick={() => window.location.assign(`${SITE_URL}/films`)}
+        >
           Watch the films
-        </Link>
+        </button>
       </div>
     </article>
   );

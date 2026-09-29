@@ -1,7 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import { SITE_URL } from "@/lib/config";
 import { DEFAULT_ALPHA, arrivalSummary, colourMap, leagueMap, userVector } from "@/lib/crest/engine";
 import { buildReport, closeBehindReason, roomPercent } from "@/lib/crest/report";
@@ -53,6 +52,12 @@ export default function CrestArrival({
 }) {
   const [openColour, setOpenColour] = useState(null);
   const [openLeague, setOpenLeague] = useState(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => setReady(true), 500);
+    return () => window.clearTimeout(id);
+  }, []);
   const options = useMemo(() => ({ group, stake }), [group, stake]);
   const summary = useMemo(() => arrivalSummary(answers, DEFAULT_ALPHA, options), [answers, options]);
   const rows = useMemo(() => colourMap(answers, DEFAULT_ALPHA, { group, stake }), [answers, group, stake]);
@@ -67,6 +72,14 @@ export default function CrestArrival({
   const roomPct = roomPercent(probability);
   const place = [club.city, club.country].filter(Boolean).join(", ");
   const topName = club.name;
+  const saveHref = crestSaveHref(encodeResume({ answers, stake, scope: group }));
+  const joinHref = crestSignupHref(club.slug);
+  const filmsHref = `${SITE_URL}/films`;
+
+  function leave(href) {
+    if (!ready) return;
+    window.location.assign(href);
+  }
 
   return (
     <section className={styles.arrival}>
@@ -217,22 +230,34 @@ export default function CrestArrival({
       ) : null}
 
       <div className={styles.next}>
-        <Link
-          href={crestSaveHref(encodeResume({ answers, stake, scope: group }))}
+        <button
+          type="button"
           className={styles.saveCta}
+          onClick={() => leave(saveHref)}
+          disabled={!ready}
         >
           Save your results
-        </Link>
+        </button>
         <button type="button" className={styles.again} onClick={onRestart}>
           Swipe again
         </button>
         <div className={styles.nextPair}>
-          <Link href={crestSignupHref(club.slug)} className={styles.nextGhost}>
+          <button
+            type="button"
+            className={styles.nextGhost}
+            onClick={() => leave(joinHref)}
+            disabled={!ready}
+          >
             Join The Reflective Football
-          </Link>
-          <Link href={`${SITE_URL}/films`} className={styles.nextGhost}>
+          </button>
+          <button
+            type="button"
+            className={styles.nextGhost}
+            onClick={() => leave(filmsHref)}
+            disabled={!ready}
+          >
             Watch the films
-          </Link>
+          </button>
         </div>
       </div>
     </section>
