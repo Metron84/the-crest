@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { allowsBoth, PART_LABEL, TOTAL } from "@/lib/crest/cards";
 import { DEFAULT_ALPHA, nextCard } from "@/lib/crest/engine";
+import { stakeLine } from "@/lib/crest/stakes";
 import SwipeCard from "./SwipeCard";
 import CrestArrival from "./CrestArrival";
 import CrestHome, { readStoredScope, writeStoredScope } from "./CrestHome";
@@ -140,6 +141,8 @@ export default function CrestSwipe({ embedded = false }) {
   const index = answers.length;
   const card = current.card;
   const percent = Math.round((index / TOTAL) * 100);
+  const showTurn = index === 5 && card.part !== 1;
+  const chip = stakeLine(stake);
 
   return (
     <div
@@ -159,6 +162,7 @@ export default function CrestSwipe({ embedded = false }) {
           </button>
           <span className={styles.partLabel}>
             {card.part} of 3 · {PART_LABEL[card.part]}
+            {chip ? <span className={styles.chipLine}>{chip}</span> : null}
           </span>
           <button type="button" className={styles.restart} onClick={restart}>
             Restart
@@ -176,7 +180,7 @@ export default function CrestSwipe({ embedded = false }) {
       </header>
 
       <section className={styles.play} aria-live="polite">
-        {card.context ? <p className={styles.cardContext}>{card.context}</p> : null}
+        {showTurn ? <p className={styles.turn}>Now the club.</p> : null}
         <div className={styles.stage}>
           <SwipeCard key={card.id} card={card} index={index} onAnswer={answer} onDrag={onDrag} />
         </div>

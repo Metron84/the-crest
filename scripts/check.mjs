@@ -96,9 +96,29 @@ if (facetSeen.size !== 12) {
   failures++;
   console.log(`FAIL deck: ${facetSeen.size} facets covered, expected 12`);
 }
+if (CARDS.some((c) => !c.context)) {
+  failures++;
+  console.log("FAIL deck: every card needs a context line");
+}
 if (CARDS.some((c) => c.context && /\u2014|\u2013/.test(c.context))) {
   failures++;
   console.log("FAIL deck: em-dash in card context");
+}
+if (BINARY_CARD_IDS.some((id) => allowsBoth(CARDS.find((c) => c.id === id)))) {
+  failures++;
+  console.log("FAIL deck: a decision card still allows Both");
+}
+
+const westHam = CLUBS.find((c) => c.slug === "west-ham-united");
+if (
+  !westHam ||
+  westHam.self[9] !== -0.3 ||
+  westHam.others[9] !== -0.3 ||
+  westHam.others[7] !== -0.3 ||
+  westHam.othersMask[7] !== true
+) {
+  failures++;
+  console.log("FAIL west-ham: terrace stamp missing (old ground / sack him)");
 }
 
 const LIFE_CARDS = CARDS.filter((c) => c.part === 1);

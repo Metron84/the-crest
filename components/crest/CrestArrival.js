@@ -5,7 +5,8 @@ import Link from "next/link";
 import { SITE_URL } from "@/lib/config";
 import { DEFAULT_ALPHA, arrivalSummary, colourMap, leagueMap, userVector } from "@/lib/crest/engine";
 import { buildReport, closeBehindReason, roomPercent } from "@/lib/crest/report";
-import { crestSignupHref } from "@/lib/crest/signup";
+import { encodeResume } from "@/lib/crest/resume";
+import { crestSaveHref, crestSignupHref } from "@/lib/crest/signup";
 import styles from "./CrestSwipe.module.css";
 
 const FAMILY_LABEL = {
@@ -125,7 +126,7 @@ export default function CrestArrival({
       </div>
 
       <h2 className={styles.subhead}>If you bleed a colour</h2>
-      <p className={styles.hintLeft}>Already wear a colour? Same match as Your club.</p>
+      <p className={styles.hintLeft}>Same last-room share as Your club.</p>
       <ul className={styles.colourRows}>
         {rows.map((row) => {
           const best = row.clubs[0];
@@ -165,7 +166,7 @@ export default function CrestArrival({
       </ul>
 
       <h2 className={styles.subhead}>Your club in every league</h2>
-      <p className={styles.hintLeft}>Same match. Closest club still standing in each league.</p>
+      <p className={styles.hintLeft}>Same last-room share. Highest club still standing in each league.</p>
       <ul className={styles.colourRows}>
         {leagueRows.map((row) => {
           const best = row.clubs[0];
@@ -216,6 +217,12 @@ export default function CrestArrival({
       ) : null}
 
       <div className={styles.next}>
+        <Link
+          href={crestSaveHref(encodeResume({ answers, stake, scope: group }))}
+          className={styles.saveCta}
+        >
+          Save your results
+        </Link>
         <button type="button" className={styles.again} onClick={onRestart}>
           Swipe again
         </button>

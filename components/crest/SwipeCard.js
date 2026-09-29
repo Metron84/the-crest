@@ -180,6 +180,7 @@ export default function SwipeCard({ card, index, onAnswer, onDrag }) {
         onPointerCancel={onPointerUp}
       >
         <p className={styles.cardQuestion}>{card.question}</p>
+        {card.context ? <p className={styles.cardOnContext}>{card.context}</p> : null}
         <div
           className={`${styles.stamp} ${styles.stampLeft}`}
           style={{ opacity: stamp("left") }}

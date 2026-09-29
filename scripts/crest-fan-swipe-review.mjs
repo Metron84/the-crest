@@ -21,6 +21,10 @@ const notes = JSON.parse(readFileSync(join(ROOT, "../data/crest/club-notes.json"
 const TIME = 9;
 const PHILOSOPHY = 7;
 
+const LOCKED = {
+  "west-ham-united": new Set(["time", "philosophy"]),
+};
+
 const TIME_TERRACE =
   /\b(upton|boleyn|highbury|vetch|plough lane|old ground|intimacy|intimate|authenticity|cartuja|relocation|boleyn memories)\b/i;
 const TIME_BOWL = /\b(new stadium|modern stadium|60,?000|emirates|london stadium|commercial scale|bowl)\b/i;
@@ -96,7 +100,7 @@ for (const club of CLUBS) {
         othersMasked ? "yes" : "no",
         mixed.toFixed(2),
         flag,
-        "",
+        LOCKED[club.slug]?.has(room.facet) ? "locked" : "",
         csv(selfNote),
         csv(othersNote),
       ].join(","),
