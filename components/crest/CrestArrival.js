@@ -72,13 +72,21 @@ export default function CrestArrival({
   const roomPct = roomPercent(probability);
   const place = [club.city, club.country].filter(Boolean).join(", ");
   const topName = club.name;
-  const saveHref = crestSaveHref(encodeResume({ answers, stake, scope: group }));
   const joinHref = crestSignupHref(club.slug);
   const filmsHref = `${SITE_URL}/films`;
 
   function leave(href) {
-    if (!ready) return;
+    if (!ready || !href) return;
     window.location.assign(href);
+  }
+
+  function saveResults() {
+    if (!ready) return;
+    try {
+      leave(crestSaveHref(encodeResume({ answers, stake, scope: group })));
+    } catch {
+      leave(crestSignupHref(club.slug));
+    }
   }
 
   return (
@@ -233,7 +241,7 @@ export default function CrestArrival({
         <button
           type="button"
           className={styles.saveCta}
-          onClick={() => leave(saveHref)}
+          onClick={saveResults}
           disabled={!ready}
         >
           Save your results
