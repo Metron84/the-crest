@@ -89,7 +89,7 @@ export default function CrestReport({ answers, group, colour, stake = null, onBa
         {blend.stakeLine ? <p className={styles.meta}>{blend.stakeLine}</p> : null}
         <p className={styles.lead}>{blend.opener}</p>
         {blend.voiceLine ? <blockquote className={styles.voice}>{blend.voiceLine}</blockquote> : null}
-        <p className={styles.match}>{blend.matchPct}% match</p>
+        <p className={styles.match}>{blend.roomPct}% match</p>
       </section>
 
       <section className={styles.section}>

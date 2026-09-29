@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { SITE_URL } from "@/lib/config";
 import { DEFAULT_ALPHA, arrivalSummary, colourMap, leagueMap, userVector } from "@/lib/crest/engine";
-import { buildReport, closeBehindReason, matchPercent, roomPercent } from "@/lib/crest/report";
+import { buildReport, closeBehindReason, roomPercent } from "@/lib/crest/report";
 import { crestSignupHref } from "@/lib/crest/signup";
 import styles from "./CrestSwipe.module.css";
 
@@ -125,7 +125,7 @@ export default function CrestArrival({
       </div>
 
       <h2 className={styles.subhead}>If you bleed a colour</h2>
-      <p className={styles.hintLeft}>Already wear a colour? See your closest club in it.</p>
+      <p className={styles.hintLeft}>Already wear a colour? Same match as Your club.</p>
       <ul className={styles.colourRows}>
         {rows.map((row) => {
           const best = row.clubs[0];
@@ -141,7 +141,7 @@ export default function CrestArrival({
                 <span className={styles.swatch} style={{ background: FAMILY_SWATCH[row.family] }} />
                 <span className={styles.colourName}>{FAMILY_LABEL[row.family]}</span>
                 <span className={styles.colourBest}>{best.club.name}</span>
-                <span className={styles.colourPct}>{matchPercent(best.score)}%</span>
+                <span className={styles.colourPct}>{roomPercent(best.probability)}%</span>
               </button>
               <div className={`${styles.colourExpand} ${open ? styles.colourExpandOpen : ""}`}>
                 <div>
@@ -149,7 +149,7 @@ export default function CrestArrival({
                     <div key={entry.club.slug} className={styles.colourClub}>
                       <span>{i + 1}</span>
                       <span>{entry.club.name}</span>
-                      <span>{matchPercent(entry.score)}%</span>
+                      <span>{roomPercent(entry.probability)}%</span>
                       {entry.club.slug === club.slug ? null : (
                         <small>
                           {closeBehindReason(user, club, entry.club, DEFAULT_ALPHA, topName)}
@@ -165,7 +165,7 @@ export default function CrestArrival({
       </ul>
 
       <h2 className={styles.subhead}>Your club in every league</h2>
-      <p className={styles.hintLeft}>Same swipes. Closest club in each competition.</p>
+      <p className={styles.hintLeft}>Same match. Closest club still standing in each league.</p>
       <ul className={styles.colourRows}>
         {leagueRows.map((row) => {
           const best = row.clubs[0];
@@ -180,7 +180,7 @@ export default function CrestArrival({
               >
                 <span className={styles.colourName}>{row.label}</span>
                 <span className={styles.colourBest}>{best.club.name}</span>
-                <span className={styles.colourPct}>{matchPercent(best.score)}%</span>
+                <span className={styles.colourPct}>{roomPercent(best.probability)}%</span>
               </button>
               <div className={`${styles.colourExpand} ${open ? styles.colourExpandOpen : ""}`}>
                 <div>
@@ -188,7 +188,7 @@ export default function CrestArrival({
                     <div key={entry.club.slug} className={styles.colourClub}>
                       <span>{i + 1}</span>
                       <span>{entry.club.name}</span>
-                      <span>{matchPercent(entry.score)}%</span>
+                      <span>{roomPercent(entry.probability)}%</span>
                       {entry.club.slug === club.slug ? null : (
                         <small>
                           {closeBehindReason(user, club, entry.club, DEFAULT_ALPHA, topName)}
