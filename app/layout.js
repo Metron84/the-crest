@@ -1,22 +1,7 @@
-import { Bodoni_Moda, Archivo, Montserrat } from "next/font/google";
+import { archivo } from "./fonts/archivo";
+import { bodoni } from "./fonts/bodoni";
+import { montserrat } from "./fonts/montserrat";
 import "./globals.css";
-
-const bodoni = Bodoni_Moda({
-  variable: "--font-bodoni",
-  subsets: ["latin"],
-});
-
-const archivo = Archivo({
-  variable: "--font-archivo",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-});
-
-const montserrat = Montserrat({
-  variable: "--font-crest-head",
-  subsets: ["latin"],
-  weight: ["700"],
-});
 
 export const metadata = {
   title: "The Crest",
