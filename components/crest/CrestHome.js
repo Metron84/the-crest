@@ -232,7 +232,7 @@ function ScopeSheet({ open, group, counts, onScope, onClose }) {
           Where should we look?
         </h2>
         <fieldset className={styles.fieldset}>
-          <legend className={styles.legend}>League</legend>
+          <legend className={styles.legend}>Country</legend>
           <ScopeRow
             checked={!group}
             label="Everywhere"
