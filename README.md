@@ -2,7 +2,7 @@
 
 Twenty swipes. One club.
 
-The Crest is a swipe game from The Reflective Football. You answer twenty cards about yourself, your tastes and how you would run a football club, and it finds the club that sounds like you. This repo holds the scoring engine, the 184-club database and the swipe UI.
+The Crest is a swipe game from The Reflective Football. You answer twenty cards about yourself, your tastes and how you would run a football club, and it finds the club that sounds like you. This repo holds the scoring engine, the 183-club database and the swipe UI.
 
 ## Run it
 
@@ -71,7 +71,7 @@ There is no colour question in the flow. Colour is an output on the result scree
 
 ### Database
 
-184 clubs: England 64 (including Cardiff), Germany 36, Italy 26, Spain 25, France 21, Rest of the World 12 (Netherlands, Scotland, Greece, Croatia, Czechia, Turkey). Vectors were scored from dual-voice research files, one club at a time, and checked for scale, pole caps, self/others separation, near-duplicates and behaviour on fixed test hands. Do not hand-edit vectors; re-score from the files.
+183 clubs: England 64 (including Cardiff), Germany 36, Italy 25, Spain 25, France 21, Rest of the World 12 (Netherlands, Scotland, Greece, Croatia, Czechia, Turkey). Vectors were scored from dual-voice research files, one club at a time, and checked for scale, pole caps, self/others separation, near-duplicates and behaviour on fixed test hands. Do not hand-edit vectors; re-score from the files.
 
 `founded` is null where the file did not carry it. `color` is a display hint derived from the named colours, not an official brand hex.
 
