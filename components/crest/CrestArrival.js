@@ -6,6 +6,7 @@ import { DEFAULT_ALPHA, arrivalSummary, colourMap, leagueMap, userVector } from 
 import { buildReport, closeBehindReason, roomPercent, visibleRoomClubs } from "@/lib/crest/report";
 import { encodeResume } from "@/lib/crest/resume";
 import { crestSaveHref, crestSignupHref } from "@/lib/crest/signup";
+import { cardDataFrom, renderShareCard, shareCard, shareKicker } from "@/lib/crest/shareCard";
 import styles from "./CrestSwipe.module.css";
 
 const FAMILY_LABEL = {
@@ -53,6 +54,7 @@ export default function CrestArrival({
   const [openColour, setOpenColour] = useState(null);
   const [openLeague, setOpenLeague] = useState(null);
   const [ready, setReady] = useState(false);
+  const [shareState, setShareState] = useState("idle");
 
   useEffect(() => {
     const id = window.setTimeout(() => setReady(true), 500);
@@ -78,6 +80,19 @@ export default function CrestArrival({
   function leave(href) {
     if (!ready || !href) return;
     window.location.assign(href);
+  }
+
+  async function shareResult() {
+    if (!ready || shareState === "busy") return;
+    setShareState("busy");
+    try {
+      const kicker = shareKicker(roomPct, confident);
+      const blob = await renderShareCard(cardDataFrom(summary, roomPct, kicker));
+      const outcome = await shareCard(blob, club.name);
+      setShareState(outcome === "saved" ? "saved" : "idle");
+    } catch {
+      setShareState("idle");
+    }
   }
 
   function saveResults() {
@@ -259,6 +274,14 @@ export default function CrestArrival({
           disabled={!ready}
         >
           Save your results
+        </button>
+        <button
+          type="button"
+          className={styles.again}
+          onClick={shareResult}
+          disabled={!ready || shareState === "busy"}
+        >
+          {shareState === "saved" ? "Card saved, link copied" : "Share your crest"}
         </button>
         <button type="button" className={styles.again} onClick={onRestart}>
           Swipe again
