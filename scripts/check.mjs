@@ -68,8 +68,8 @@ for (const club of CLUBS) {
 }
 const regionCases = [
   ["cardiff-city", "England", "Wales", "Championship"],
-  ["swansea-city", "England", "England", "Championship"],
-  ["monaco", "France", "France", "Ligue 1"],
+  ["swansea-city", "England", "Wales", "Championship"],
+  ["monaco", "France", "Monaco", "Ligue 1"],
 ];
 for (const [slug, region, country, competition] of regionCases) {
   const club = CLUBS.find((c) => c.slug === slug);
