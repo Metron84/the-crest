@@ -4,7 +4,7 @@
  * test misses its targets.
  */
 import { allowsBoth, BINARY_CARD_IDS, CARDS, TOTAL } from "../lib/crest/cards.js";
-import { CLUBS, CREST_GROUPS, regionForCountry } from "../lib/crest/clubs.js";
+import { CLUBS, CREST_GROUPS, regionForCompetition } from "../lib/crest/clubs.js";
 import { CREST_COMPETITIONS } from "../lib/crest/competitions.js";
 import {
   blend,
@@ -46,16 +46,44 @@ if (CLUBS.some((c) => c.country === "Italy" && c.group !== "Italy")) {
   failures++;
   console.log("FAIL groups: an Italian club is not in Italy");
 }
+const PYRAMID_REGION = {
+  "Premier League": "England",
+  Championship: "England",
+  "League One": "England",
+  "Serie A": "Italy",
+  "Serie B": "Italy",
+  LaLiga: "Spain",
+  "LaLiga 2": "Spain",
+  Bundesliga: "Germany",
+  "2. Bundesliga": "Germany",
+  "Ligue 1": "France",
+  "Ligue 2": "France",
+};
 for (const club of CLUBS) {
-  if (club.region !== regionForCountry(club.country)) {
+  const expected = PYRAMID_REGION[club.competition] || "Rest of the World";
+  if (club.region !== expected || club.region !== regionForCompetition(club.competition)) {
     failures++;
-    console.log(`FAIL region: ${club.slug} is ${club.region} for ${club.country}`);
+    console.log(`FAIL region: ${club.slug} is ${club.region} for ${club.competition}, expected ${expected}`);
   }
 }
-const cardiff = CLUBS.find((c) => c.slug === "cardiff-city");
-if (!cardiff || cardiff.region !== "Rest of the World" || cardiff.country !== "Wales" || cardiff.group !== "England") {
+const regionCases = [
+  ["cardiff-city", "England", "Wales", "Championship"],
+  ["swansea-city", "England", "England", "Championship"],
+  ["monaco", "France", "France", "Ligue 1"],
+];
+for (const [slug, region, country, competition] of regionCases) {
+  const club = CLUBS.find((c) => c.slug === slug);
+  if (!club || club.region !== region || club.country !== country || club.competition !== competition) {
+    failures++;
+    console.log(
+      `FAIL region: ${slug} is ${club?.region} / ${club?.country} / ${club?.competition}, expected ${region} / ${country} / ${competition}`,
+    );
+  }
+}
+const wrexham = CLUBS.find((c) => c.slug === "wrexham" || c.slug === "wrexham-afc");
+if (wrexham && (wrexham.region !== "England" || !PYRAMID_REGION[wrexham.competition])) {
   failures++;
-  console.log("FAIL region: Cardiff should stay in the England group, with country Wales and region Rest of the World");
+  console.log(`FAIL region: Wrexham plays in ${wrexham.competition} but region is ${wrexham.region}`);
 }
 for (const club of CLUBS) {
   const problems = [];

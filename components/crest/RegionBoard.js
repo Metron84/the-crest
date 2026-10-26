@@ -34,7 +34,20 @@ export default function RegionBoard({ results }) {
             ) : (
               <div className={styles.lead}>
                 <h3>{row.top.name}</h3>
-                <p>{[row.top.city, row.top.league].filter(Boolean).join(" · ")}</p>
+                <p>
+                  {row.top.flag && row.top.country !== row.region ? (
+                    <span className={styles.flag} aria-hidden="true">
+                      {row.top.flag}{" "}
+                    </span>
+                  ) : null}
+                  {[
+                    row.top.country !== row.region ? row.top.country : null,
+                    row.top.city,
+                    row.top.league,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </p>
                 <p className={styles.pct}>{row.top.percentage}%</p>
               </div>
             )}
