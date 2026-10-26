@@ -99,7 +99,7 @@ export default function CrestArrival({
   function saveResults() {
     if (!ready) return;
     try {
-      leave(crestSaveHref(encodeResume({ answers, stake, scope: group })));
+      leave(crestSaveHref(encodeResume({ answers, stake, scope: group, fc: fcResults })));
     } catch {
       leave(crestSignupHref(club.slug));
     }
