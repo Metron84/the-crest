@@ -1,0 +1,109 @@
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  margin: 0;
+  padding: 16px;
+  border: 1px solid rgba(242, 237, 228, 0.14);
+  border-radius: 14px;
+  background: rgba(242, 237, 228, 0.04);
+}
+
+.label {
+  margin: 0;
+  font-family: var(--font-crest-head), "Montserrat", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #d8232a;
+}
+
+.lead h3 {
+  margin: 10px 0 0;
+  font-family: var(--font-crest-head), "Montserrat", sans-serif;
+  font-size: 1.55rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.lead p {
+  margin: 6px 0 0;
+  color: rgba(242, 237, 228, 0.72);
+  font-size: 0.95rem;
+}
+
+.pct {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.lead .pct {
+  margin-top: 12px;
+  font-family: var(--font-crest-head), "Montserrat", sans-serif;
+  font-size: 1.35rem;
+  color: #f2ede4;
+}
+
+.rank {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+}
+
+.rank li {
+  display: grid;
+  grid-template-columns: 1.4rem 1.6rem minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  min-height: 52px;
+  border-top: 1px solid rgba(242, 237, 228, 0.1);
+}
+
+.rank li:first-child {
+  border-top: 0;
+}
+
+.pos {
+  color: rgba(242, 237, 228, 0.55);
+  font-variant-numeric: tabular-nums;
+}
+
+.flag {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.who {
+  min-width: 0;
+}
+
+.who strong {
+  display: block;
+  font-size: 1rem;
+}
+
+.who small {
+  display: block;
+  margin-top: 2px;
+  color: rgba(242, 237, 228, 0.62);
+  font-size: 0.8rem;
+}
+
+@media (min-width: 760px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .wide {
+    grid-column: 1 / -1;
+  }
+}

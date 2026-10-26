@@ -6,6 +6,7 @@ import { DEFAULT_ALPHA, arrivalSummary } from "@/lib/crest/engine";
 import { buildReport, trait, REPORT_PHRASES, roomPercent } from "@/lib/crest/report";
 import { crestSignupHref } from "@/lib/crest/signup";
 import { cardDataFrom, renderShareCard, shareCard, shareKicker } from "@/lib/crest/shareCard";
+import RegionBoard from "./RegionBoard";
 import styles from "./CrestReport.module.css";
 
 const GROUPS = ["Heart", "Mind", "Soul"];
@@ -24,9 +25,10 @@ const VIEW_CAPTION = {
  *   stake?: string|null,
  *   onBack: () => void,
  *   onRestart: () => void,
+ *   fcResults?: { regions: object[] }|null,
  * }} props
  */
-export default function CrestReport({ answers, group, colour, stake = null, onBack, onRestart }) {
+export default function CrestReport({ answers, group, colour, stake = null, onBack, onRestart, fcResults = null }) {
   const [view, setView] = useState("blend");
   const [ready, setReady] = useState(false);
   const [shareState, setShareState] = useState("idle");
@@ -142,19 +144,8 @@ export default function CrestReport({ answers, group, colour, stake = null, onBa
 
         <section className={styles.section}>
           <p className={styles.kicker}>Across the map</p>
-          <h2 className={styles.heading}>Your club in every league.</h2>
-          <ul className={styles.leagues}>
-            {blend.leagues.map((row) => (
-              <li key={row.group}>
-                <span className={styles.leagueName}>{row.league}</span>
-                <span className={styles.leagueClub}>
-                  {row.clubName}
-                  {row.isTop ? <small>Your match</small> : null}
-                </span>
-                <span className={styles.leaguePct}>{row.matchPct}%</span>
-              </li>
-            ))}
-          </ul>
+          <h2 className={styles.heading}>Your FC.</h2>
+          <RegionBoard results={fcResults} />
         </section>
 
         <section className={styles.section}>
@@ -178,7 +169,7 @@ export default function CrestReport({ answers, group, colour, stake = null, onBa
 
       <div className={styles.actions}>
         <button type="button" className={styles.share} onClick={share} disabled={shareState === "busy"}>
-          {shareState === "saved" ? "Card saved, link copied" : "Share my crest"}
+          {shareState === "saved" ? "Card saved, link copied" : "Share your FC"}
         </button>
         <button
           type="button"

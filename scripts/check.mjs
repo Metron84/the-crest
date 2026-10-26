@@ -4,7 +4,7 @@
  * test misses its targets.
  */
 import { allowsBoth, BINARY_CARD_IDS, CARDS, TOTAL } from "../lib/crest/cards.js";
-import { CLUBS, CREST_GROUPS } from "../lib/crest/clubs.js";
+import { CLUBS, CREST_GROUPS, regionForCountry } from "../lib/crest/clubs.js";
 import { CREST_COMPETITIONS } from "../lib/crest/competitions.js";
 import {
   blend,
@@ -45,6 +45,17 @@ for (const g of CREST_GROUPS) {
 if (CLUBS.some((c) => c.country === "Italy" && c.group !== "Italy")) {
   failures++;
   console.log("FAIL groups: an Italian club is not in Italy");
+}
+for (const club of CLUBS) {
+  if (club.region !== regionForCountry(club.country)) {
+    failures++;
+    console.log(`FAIL region: ${club.slug} is ${club.region} for ${club.country}`);
+  }
+}
+const cardiff = CLUBS.find((c) => c.slug === "cardiff-city");
+if (!cardiff || cardiff.region !== "Rest of the World" || cardiff.country !== "Wales" || cardiff.group !== "England") {
+  failures++;
+  console.log("FAIL region: Cardiff should stay in the England group, with country Wales and region Rest of the World");
 }
 for (const club of CLUBS) {
   const problems = [];

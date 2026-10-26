@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { allowsBoth, PART_LABEL, TOTAL } from "@/lib/crest/cards";
 import { DEFAULT_ALPHA, nextCard } from "@/lib/crest/engine";
+import { buildScopeResults } from "@/lib/crest/results";
 import { stakeLine } from "@/lib/crest/stakes";
 import SwipeCard from "./SwipeCard";
 import CrestArrival from "./CrestArrival";
@@ -23,6 +24,7 @@ export default function CrestSwipe({ embedded = false }) {
   const [group, setGroup] = useState(null);
   const [stake, setStake] = useState(null);
   const [answers, setAnswers] = useState([]);
+  const [fcResults, setFcResults] = useState(null);
   const [drag, setDrag] = useState(0);
   const boardRef = useRef(null);
 
@@ -68,7 +70,10 @@ export default function CrestSwipe({ embedded = false }) {
     const next = [...answers, { cardId: current.card.id, value }];
     setDrag(0);
     setAnswers(next);
-    if (next.length >= TOTAL) setStep("reveal");
+    if (next.length >= TOTAL) {
+      setFcResults(buildScopeResults(next, { group, stake }));
+      setStep("reveal");
+    }
   }
 
   function back() {
@@ -83,6 +88,7 @@ export default function CrestSwipe({ embedded = false }) {
   function restart() {
     setAnswers([]);
     setStake(null);
+    setFcResults(null);
     setDrag(0);
     setStep("scope");
   }
@@ -105,6 +111,7 @@ export default function CrestSwipe({ embedded = false }) {
           colour={null}
           onBack={() => setStep("arrival")}
           onRestart={restart}
+          fcResults={fcResults}
         />
       </div>
     );
@@ -125,6 +132,7 @@ export default function CrestSwipe({ embedded = false }) {
           stake={stake}
           onOpenReport={() => setStep("report")}
           onRestart={restart}
+          fcResults={fcResults}
         />
       </div>
     );

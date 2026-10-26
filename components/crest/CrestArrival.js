@@ -2,11 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { SITE_URL } from "@/lib/config";
-import { DEFAULT_ALPHA, arrivalSummary, colourMap, leagueMap, userVector } from "@/lib/crest/engine";
+import { DEFAULT_ALPHA, arrivalSummary, colourMap, userVector } from "@/lib/crest/engine";
 import { buildReport, closeBehindReason, roomPercent, visibleRoomClubs } from "@/lib/crest/report";
 import { encodeResume } from "@/lib/crest/resume";
 import { crestSaveHref, crestSignupHref } from "@/lib/crest/signup";
 import { cardDataFrom, renderShareCard, shareCard, shareKicker } from "@/lib/crest/shareCard";
+import RegionBoard from "./RegionBoard";
 import styles from "./CrestSwipe.module.css";
 
 const FAMILY_LABEL = {
@@ -42,6 +43,7 @@ const FAMILY_SWATCH = {
  *   stake?: string|null,
  *   onOpenReport: () => void,
  *   onRestart: () => void,
+ *   fcResults?: { regions: { region: string, label: string, percentage: number, top: object, ranked: object[] }[] }|null,
  * }} props
  */
 export default function CrestArrival({
@@ -50,9 +52,9 @@ export default function CrestArrival({
   stake = null,
   onOpenReport,
   onRestart,
+  fcResults = null,
 }) {
   const [openColour, setOpenColour] = useState(null);
-  const [openLeague, setOpenLeague] = useState(null);
   const [ready, setReady] = useState(false);
   const [shareState, setShareState] = useState("idle");
 
@@ -63,7 +65,6 @@ export default function CrestArrival({
   const options = useMemo(() => ({ group, stake }), [group, stake]);
   const summary = useMemo(() => arrivalSummary(answers, DEFAULT_ALPHA, options), [answers, options]);
   const rows = useMemo(() => colourMap(answers, DEFAULT_ALPHA, { group, stake }), [answers, group, stake]);
-  const leagueRows = useMemo(() => leagueMap(answers, DEFAULT_ALPHA, { group, stake }), [answers, group, stake]);
   const report = useMemo(
     () => buildReport({ answers, group, colour: null, stake }, "blend"),
     [answers, group, stake],
@@ -107,7 +108,7 @@ export default function CrestArrival({
   return (
     <section className={styles.arrival}>
       <p className={styles.kicker}>
-        {roomPct < 80 ? "Closest match" : confident ? "Your club" : "You sit between two"}
+        {shareKicker(roomPct, confident)}
       </p>
 
       <div className={styles.arrivalBand} style={{ "--club": club.color || "#D8232A" }}>
@@ -208,51 +209,9 @@ export default function CrestArrival({
         })}
       </ul>
 
-      <h2 className={styles.subhead}>Your club in every league</h2>
-      <p className={styles.hintLeft}>Closest club in this league, from where you asked us to look.</p>
-      <ul className={styles.colourRows}>
-        {leagueRows.map((row) => {
-          const best = row.clubs[0];
-          const visible = visibleRoomClubs(row.clubs);
-          const canOpen = visible.length >= 2;
-          const open = canOpen && openLeague === row.competition;
-          return (
-            <li key={row.competition}>
-              <button
-                type="button"
-                className={`${styles.colourRow} ${styles.leagueRow} ${open ? styles.colourRowActive : ""}`}
-                aria-expanded={open}
-                onClick={() => {
-                  if (!canOpen) return;
-                  setOpenLeague(open ? null : row.competition);
-                }}
-              >
-                <span className={styles.colourName}>{row.label}</span>
-                <span className={styles.colourBest}>{best.club.name}</span>
-                <span className={styles.colourPct}>{roomPercent(best.probability)}%</span>
-              </button>
-              {canOpen ? (
-                <div className={`${styles.colourExpand} ${open ? styles.colourExpandOpen : ""}`}>
-                  <div>
-                    {visible.map((entry, i) => (
-                      <div key={entry.club.slug} className={styles.colourClub}>
-                        <span>{i + 1}</span>
-                        <span>{entry.club.name}</span>
-                        <span>{roomPercent(entry.probability)}%</span>
-                        {entry.club.slug === club.slug ? null : (
-                          <small>
-                            {closeBehindReason(user, club, entry.club, DEFAULT_ALPHA, topName)}
-                          </small>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-            </li>
-          );
-        })}
-      </ul>
+      <h2 className={styles.subhead}>Your FC</h2>
+      <p className={styles.hintLeft}>Top club in each region, from where you asked us to look.</p>
+      <RegionBoard results={fcResults} />
 
       {report ? (
         <div className={styles.reportCard}>
@@ -281,7 +240,7 @@ export default function CrestArrival({
           onClick={shareResult}
           disabled={!ready || shareState === "busy"}
         >
-          {shareState === "saved" ? "Card saved, link copied" : "Share your crest"}
+          {shareState === "saved" ? "Card saved, link copied" : "Share your FC"}
         </button>
         <button type="button" className={styles.again} onClick={onRestart}>
           Swipe again
