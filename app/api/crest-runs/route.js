@@ -15,7 +15,6 @@ export async function POST(request) {
       method: "POST",
       headers: {
         apikey: key,
-        Authorization: `Bearer ${key}`,
         "Content-Type": "application/json",
         Prefer: "return=minimal",
       },
