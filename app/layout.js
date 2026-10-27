@@ -4,9 +4,20 @@ import { montserrat } from "./fonts/montserrat";
 import "./globals.css";
 
 export const metadata = {
-  title: "The Crest",
-  description:
-    "Eighteen swipes. One club. Find the football club that sounds like your heart, thinks like your mind and feels like your soul.",
+  title: "Find Your FC",
+  description: "Matched on heart, mind and soul",
+  applicationName: "Find Your FC",
+  openGraph: {
+    title: "Find Your FC",
+    description: "Matched on heart, mind and soul",
+    siteName: "Find Your FC",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Find Your FC",
+    description: "Matched on heart, mind and soul",
+  },
   icons: { icon: "/icon.png" },
 };
 

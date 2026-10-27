@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
-import { CLUBS, CREST_GROUP_LABEL, CREST_GROUPS } from "@/lib/crest/clubs";
+import { CLUBS, CREST_GROUP_LABEL, CREST_REGIONS } from "@/lib/crest/clubs";
 import styles from "./CrestHome.module.css";
 
 const SCOPE_KEY = "crest:scope";
@@ -11,21 +11,17 @@ const SCOPE_KEY = "crest:scope";
  * @param {string|null} group
  */
 export function readStoredScope() {
-  try {
-    const saved = window.localStorage.getItem(SCOPE_KEY);
-    if (!saved || saved === "everywhere") return null;
-    return CREST_GROUPS.includes(saved) ? saved : null;
-  } catch {
-    return null;
-  }
+  return null;
 }
 
 /**
- * @param {string|null} group
+ * A new run does not keep a scope. Anything previously stored is removed.
+ *
+ * @param {string|null} [_group]
  */
-export function writeStoredScope(group) {
+export function writeStoredScope(_group) {
   try {
-    window.localStorage.setItem(SCOPE_KEY, group || "everywhere");
+    window.localStorage.removeItem(SCOPE_KEY);
   } catch {
     /* ignore quota / private mode */
   }
@@ -49,7 +45,7 @@ export default function CrestHome({ group, onScope, onStart, backHref = "/games"
   const chipRef = useRef(null);
   const counts = {
     all: CLUBS.length,
-    ...Object.fromEntries(CREST_GROUPS.map((g) => [g, CLUBS.filter((c) => c.group === g).length])),
+    ...Object.fromEntries(CREST_REGIONS.map((g) => [g, CLUBS.filter((c) => c.region === g).length])),
   };
 
   useEffect(() => {
@@ -100,13 +96,13 @@ export default function CrestHome({ group, onScope, onStart, backHref = "/games"
         ) : (
           <span />
         )}
-        <span className={styles.brand}>The Crest</span>
+        <span className={styles.brand}>Find Your FC</span>
       </header>
 
       <div className={styles.layout}>
         <div className={styles.copy}>
           <h1 className={styles.headline}>Eighteen swipes. One club that sounds like you.</h1>
-          <p className={styles.subline}>{CLUBS.length} clubs. Two minutes.</p>
+          <p className={styles.subline}>Matched on heart, mind and soul</p>
         </div>
 
         <button type="button" className={styles.stack} onClick={start} data-hint={hint || undefined}>
@@ -232,14 +228,14 @@ function ScopeSheet({ open, group, counts, onScope, onClose }) {
           Where should we look?
         </h2>
         <fieldset className={styles.fieldset}>
-          <legend className={styles.legend}>Country</legend>
+          <legend className={styles.legend}>Region</legend>
           <ScopeRow
             checked={!group}
             label="Everywhere"
             count={counts.all}
             onPick={() => pick(null)}
           />
-          {CREST_GROUPS.map((g) => (
+          {CREST_REGIONS.map((g) => (
             <ScopeRow
               key={g}
               checked={group === g}

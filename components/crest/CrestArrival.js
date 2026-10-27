@@ -1,81 +1,66 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { SITE_URL } from "@/lib/config";
-import { DEFAULT_ALPHA, arrivalSummary, colourMap, leagueMap, userVector } from "@/lib/crest/engine";
-import { buildReport, closeBehindReason, roomPercent, visibleRoomClubs } from "@/lib/crest/report";
+import { APP_VERSION, SITE_URL } from "@/lib/config";
+import { DEFAULT_ALPHA, arrivalSummary } from "@/lib/crest/engine";
+import { buildOutcome } from "@/lib/crest/outcome";
+import { CONFIDENT_ROOM_PCT } from "@/lib/crest/report";
 import { encodeResume } from "@/lib/crest/resume";
 import { crestSaveHref, crestSignupHref } from "@/lib/crest/signup";
+import { logFinishedRun } from "@/lib/crest/runLog";
 import { cardDataFrom, renderShareCard, shareCard, shareKicker } from "@/lib/crest/shareCard";
 import styles from "./CrestSwipe.module.css";
 
-const FAMILY_LABEL = {
-  red: "red",
-  blue: "blue",
-  "sky blue": "sky blue",
-  black: "black",
-  yellow: "yellow",
-  green: "green",
-  orange: "orange",
-  purple: "purple",
-  pink: "pink",
-  brown: "brown",
-};
-
-const FAMILY_SWATCH = {
-  red: "#C8102E",
-  blue: "#1C4E9D",
-  "sky blue": "#6CABDD",
-  black: "#111111",
-  yellow: "#F2C400",
-  green: "#0E7A3E",
-  orange: "#F58025",
-  purple: "#5B2A86",
-  pink: "#E88FB4",
-  brown: "#5A3A2A",
-};
-
 /**
+ * Result screen. Born to comes from roots. Built for comes from the swipes.
+ *
  * @param {{
  *   answers: import("@/lib/crest/engine").CrestAnswer[],
  *   group: string|null,
  *   stake?: string|null,
- *   onOpenReport: () => void,
+ *   roots?: import("@/lib/crest/roots").CrestRoots|null,
+ *   runId?: number,
  *   onRestart: () => void,
  * }} props
  */
-export default function CrestArrival({
-  answers,
-  group,
-  stake = null,
-  onOpenReport,
-  onRestart,
-}) {
-  const [openColour, setOpenColour] = useState(null);
-  const [openLeague, setOpenLeague] = useState(null);
+export default function CrestArrival({ answers, group, stake = null, roots = null, runId = 0, onRestart }) {
   const [ready, setReady] = useState(false);
   const [shareState, setShareState] = useState("idle");
+  const [worldOpen, setWorldOpen] = useState(false);
 
   useEffect(() => {
     const id = window.setTimeout(() => setReady(true), 500);
     return () => window.clearTimeout(id);
   }, []);
-  const options = useMemo(() => ({ group, stake }), [group, stake]);
-  const summary = useMemo(() => arrivalSummary(answers, DEFAULT_ALPHA, options), [answers, options]);
-  const rows = useMemo(() => colourMap(answers, DEFAULT_ALPHA, { group, stake }), [answers, group, stake]);
-  const leagueRows = useMemo(() => leagueMap(answers, DEFAULT_ALPHA, { group, stake }), [answers, group, stake]);
-  const report = useMemo(
-    () => buildReport({ answers, group, colour: null, stake }, "blend"),
+
+  const outcome = useMemo(
+    () => buildOutcome(answers, { group, stake, roots }),
+    [answers, group, stake, roots],
+  );
+  const summary = useMemo(
+    () => arrivalSummary(answers, DEFAULT_ALPHA, { group, stake }),
     [answers, group, stake],
   );
-  const user = useMemo(() => userVector(answers, stake), [answers, stake]);
 
-  const { club, probability, confident, runnerUp, greenFlags, rub } = summary;
-  const roomPct = roomPercent(probability);
-  const place = [club.city, club.country].filter(Boolean).join(", ");
-  const topName = club.name;
-  const joinHref = crestSignupHref(club.slug);
-  const filmsHref = `${SITE_URL}/films`;
+  useEffect(() => {
+    if (!runId || !outcome.built) return;
+    logFinishedRun(runId, {
+      appVersion: APP_VERSION,
+      scope: group,
+      stake,
+      roots,
+      answers,
+      built: outcome.built,
+      runnerUp: outcome.runnerUp,
+      born: outcome.born,
+      regions: outcome.regions,
+    });
+  }, [runId, outcome, group, stake, roots, answers]);
+
+  const built = outcome.built;
+  const born = outcome.born;
+  const hero = heroOf(outcome);
+  const heroSlug = hero?.slug || null;
 
   function leave(href) {
     if (!ready || !href) return;
@@ -83,196 +68,109 @@ export default function CrestArrival({
   }
 
   async function shareResult() {
-    if (!ready || shareState === "busy") return;
+    if (!ready || shareState === "busy" || !built) return;
     setShareState("busy");
     try {
-      const kicker = shareKicker(roomPct, confident);
-      const blob = await renderShareCard(cardDataFrom(summary, roomPct, kicker));
-      const outcome = await shareCard(blob, club.name);
-      setShareState(outcome === "saved" ? "saved" : "idle");
+      const kicker = shareKicker(built.percentage, !outcome.closeCall);
+      const blob = await renderShareCard(cardDataFrom(summary, built.percentage, kicker));
+      const shareName = hero?.name || built.name;
+      const result = await shareCard(blob, shareName);
+      setShareState(result === "saved" ? "saved" : "idle");
     } catch {
       setShareState("idle");
     }
   }
 
   function saveResults() {
-    if (!ready) return;
+    if (!ready || !built) return;
     try {
-      leave(crestSaveHref(encodeResume({ answers, stake, scope: group })));
+      leave(
+        crestSaveHref(
+          encodeResume({
+            answers,
+            stake,
+            scope: group,
+            version: APP_VERSION,
+            roots,
+            born,
+            built,
+            runnerUp: outcome.runnerUp,
+            rows: outcome.regions,
+          }),
+        ),
+      );
     } catch {
-      leave(crestSignupHref(club.slug));
+      leave(crestSignupHref(built.slug));
     }
   }
 
+  if (!built) return null;
+
+  const filmsHref = `${SITE_URL}/films`;
+  const joinHref = crestSignupHref(heroSlug || built.slug);
+
   return (
     <section className={styles.arrival}>
-      <p className={styles.kicker}>
-        {roomPct < 80 ? "Closest match" : confident ? "Your club" : "You sit between two"}
-      </p>
+      <ResultCards outcome={outcome} />
 
-      <div className={styles.arrivalBand} style={{ "--club": club.color || "#D8232A" }}>
-        <h1 className={styles.arrivalName}>{club.name}</h1>
-        <p className={styles.arrivalMeta}>
-          {place}
-          {club.founded ? ` · ${club.founded}` : ""}
-          {club.home ? ` · ${club.home}` : ""}
+      {outcome.closeCall && outcome.runnerUp ? (
+        <p className={styles.line}>
+          Close call: {outcome.runnerUp.name} is right behind at {outcome.runnerUp.percentage}%.
         </p>
-        <p className={styles.arrivalScore}>{roomPct}% of the last room</p>
-      </div>
+      ) : null}
 
-      {!confident && runnerUp ? (
-        <div className={styles.arrivalBand} style={{ "--club": runnerUp.color || "#F2EDE4" }}>
-          <h2 className={styles.arrivalNameSecond}>{runnerUp.name}</h2>
-          <p className={styles.arrivalMeta}>
-            {[runnerUp.city, runnerUp.country].filter(Boolean).join(", ")}
-          </p>
+      {outcome.deciding.length && outcome.runnerUp ? (
+        <div className={styles.flags}>
+          <h2 className={styles.subhead}>What decided it over {outcome.runnerUp.name}</h2>
+          {outcome.deciding.map((row) => (
+            <div key={row.id} className={styles.flag}>
+              <strong>{row.question}</strong>
+              <span>{row.answer}</span>
+            </div>
+          ))}
         </div>
       ) : null}
-
-      {club.selfLine ? (
-        <blockquote className={styles.line}>
-          <span className={styles.lineWho}>How they see themselves</span>
-          {club.selfLine}
-        </blockquote>
-      ) : null}
-      {club.othersLine ? (
-        <blockquote className={styles.line}>
-          <span className={styles.lineWho}>How the game sees them</span>
-          {club.othersLine}
-        </blockquote>
-      ) : null}
-
-      <div className={styles.flags}>
-        {greenFlags.map((flag) => (
-          <div key={flag.card.id} className={styles.flag}>
-            <span className={styles.flagTag}>Shared</span>
-            <strong>{flag.card.question}</strong>
-            <span>You and this club: {flag.clubPhrase}.</span>
-          </div>
-        ))}
-        {rub ? (
-          <div className={`${styles.flag} ${styles.flagRub}`}>
-            <span className={styles.flagTag}>The rub</span>
-            <strong>{rub.card.question}</strong>
-            <span>
-              You: {rub.userPhrase}. Them: {rub.clubPhrase}.
-            </span>
-          </div>
-        ) : null}
-      </div>
-
-      <h2 className={styles.subhead}>If you bleed a colour</h2>
-      <p className={styles.hintLeft}>Closest club in this colour, from where you asked us to look.</p>
-      <ul className={styles.colourRows}>
-        {rows.map((row) => {
-          const best = row.clubs[0];
-          const visible = visibleRoomClubs(row.clubs);
-          const canOpen = visible.length >= 2;
-          const open = canOpen && openColour === row.family;
-          return (
-            <li key={row.family}>
-              <button
-                type="button"
-                className={`${styles.colourRow} ${open ? styles.colourRowActive : ""}`}
-                aria-expanded={open}
-                onClick={() => {
-                  if (!canOpen) return;
-                  setOpenColour(open ? null : row.family);
-                }}
-              >
-                <span className={styles.swatch} style={{ background: FAMILY_SWATCH[row.family] }} />
-                <span className={styles.colourName}>{FAMILY_LABEL[row.family]}</span>
-                <span className={styles.colourBest}>{best.club.name}</span>
-                <span className={styles.colourPct}>{roomPercent(best.probability)}%</span>
-              </button>
-              {canOpen ? (
-                <div className={`${styles.colourExpand} ${open ? styles.colourExpandOpen : ""}`}>
-                  <div>
-                    {visible.map((entry, i) => (
-                      <div key={entry.club.slug} className={styles.colourClub}>
-                        <span>{i + 1}</span>
-                        <span>{entry.club.name}</span>
-                        <span>{roomPercent(entry.probability)}%</span>
-                        {entry.club.slug === club.slug ? null : (
-                          <small>
-                            {closeBehindReason(user, club, entry.club, DEFAULT_ALPHA, topName)}
-                          </small>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-            </li>
-          );
-        })}
-      </ul>
 
       <h2 className={styles.subhead}>Your club in every league</h2>
-      <p className={styles.hintLeft}>Closest club in this league, from where you asked us to look.</p>
-      <ul className={styles.colourRows}>
-        {leagueRows.map((row) => {
-          const best = row.clubs[0];
-          const visible = visibleRoomClubs(row.clubs);
-          const canOpen = visible.length >= 2;
-          const open = canOpen && openLeague === row.competition;
+      <ul className={styles.leagueList}>
+        {outcome.regions.map((row) => {
+          const hit = row.top?.slug && row.top.slug === heroSlug;
+          const world = row.region === "Rest of the World";
           return (
-            <li key={row.competition}>
+            <li key={row.region}>
               <button
                 type="button"
-                className={`${styles.colourRow} ${styles.leagueRow} ${open ? styles.colourRowActive : ""}`}
-                aria-expanded={open}
+                className={`${styles.leagueRow} ${hit ? styles.leagueRowOn : ""}`}
                 onClick={() => {
-                  if (!canOpen) return;
-                  setOpenLeague(open ? null : row.competition);
+                  if (world) setWorldOpen((open) => !open);
                 }}
+                aria-expanded={world ? worldOpen : undefined}
               >
-                <span className={styles.colourName}>{row.label}</span>
-                <span className={styles.colourBest}>{best.club.name}</span>
-                <span className={styles.colourPct}>{roomPercent(best.probability)}%</span>
+                <span>{row.region}</span>
+                <strong>{row.top ? row.top.name : "None in this search"}</strong>
+                <span>{row.top ? `${row.top.percentage}%` : ""}</span>
               </button>
-              {canOpen ? (
-                <div className={`${styles.colourExpand} ${open ? styles.colourExpandOpen : ""}`}>
-                  <div>
-                    {visible.map((entry, i) => (
-                      <div key={entry.club.slug} className={styles.colourClub}>
-                        <span>{i + 1}</span>
-                        <span>{entry.club.name}</span>
-                        <span>{roomPercent(entry.probability)}%</span>
-                        {entry.club.slug === club.slug ? null : (
-                          <small>
-                            {closeBehindReason(user, club, entry.club, DEFAULT_ALPHA, topName)}
-                          </small>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              {world && worldOpen ? (
+                <ul className={styles.leagueSub}>
+                  {(row.sub || []).map((sub) => {
+                    const subHit = sub.top?.slug && sub.top.slug === heroSlug;
+                    return (
+                      <li key={sub.subregion} className={subHit ? styles.leagueRowOn : undefined}>
+                        <span>{sub.subregion}</span>
+                        <strong>{sub.top ? sub.top.name : "None in this search"}</strong>
+                        <span>{sub.top ? `${sub.top.percentage}%` : ""}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
               ) : null}
             </li>
           );
         })}
       </ul>
 
-      {report ? (
-        <div className={styles.reportCard}>
-          <p className={styles.reportKicker}>The report</p>
-          <h2 className={styles.reportTitle}>Why this club, and where you part.</h2>
-          <p className={styles.reportOpener}>{report.opener}</p>
-          <button type="button" className={styles.reportButton} onClick={onOpenReport}>
-            Read the full report
-            <ArrowRight />
-          </button>
-        </div>
-      ) : null}
-
       <div className={styles.next}>
-        <button
-          type="button"
-          className={styles.saveCta}
-          onClick={saveResults}
-          disabled={!ready}
-        >
+        <button type="button" className={styles.saveCta} onClick={saveResults} disabled={!ready}>
           Save your results
         </button>
         <button
@@ -281,26 +179,16 @@ export default function CrestArrival({
           onClick={shareResult}
           disabled={!ready || shareState === "busy"}
         >
-          {shareState === "saved" ? "Card saved, link copied" : "Share your crest"}
+          {shareState === "saved" ? "Card saved, link copied" : "Share your FC"}
         </button>
         <button type="button" className={styles.again} onClick={onRestart}>
           Swipe again
         </button>
         <div className={styles.nextPair}>
-          <button
-            type="button"
-            className={styles.nextGhost}
-            onClick={() => leave(joinHref)}
-            disabled={!ready}
-          >
+          <button type="button" className={styles.nextGhost} onClick={() => leave(joinHref)} disabled={!ready}>
             Join The Reflective Football
           </button>
-          <button
-            type="button"
-            className={styles.nextGhost}
-            onClick={() => leave(filmsHref)}
-            disabled={!ready}
-          >
+          <button type="button" className={styles.nextGhost} onClick={() => leave(filmsHref)} disabled={!ready}>
             Watch the films
           </button>
         </div>
@@ -309,16 +197,79 @@ export default function CrestArrival({
   );
 }
 
-function ArrowRight() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-      <path
-        d="M7 3.5 12.5 9 7 14.5"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+/**
+ * @param {{ outcome: ReturnType<typeof buildOutcome> }} props
+ */
+function ResultCards({ outcome }) {
+  const { built, born } = outcome;
+  if (!built) return null;
+
+  if (!born) {
+    const label = built.percentage >= CONFIDENT_ROOM_PCT ? "Your FC" : "Closest match";
+    return <ClubCard label={label} name={built.name} color={built.color} percentage={built.percentage} />;
+  }
+
+  if (born.typed) {
+    return (
+      <>
+        <div className={styles.resultPair}>
+          <ClubCard label="Born to" name={born.name} color={born.color} note="Not on our list yet" />
+          <ClubCard label="Built for" name={built.name} color={built.color} percentage={built.percentage} />
+        </div>
+        <p className={styles.line}>We can&apos;t score {born.name} yet, so your swipes decide.</p>
+      </>
+    );
+  }
+
+  if (outcome.same) {
+    return (
+      <ClubCard
+        label="Your FC, by blood and by heart"
+        name={built.name}
+        color={built.color}
+        percentage={built.percentage}
       />
-    </svg>
+    );
+  }
+
+  const line =
+    outcome.leanWinner === "born"
+      ? `Your roots outweigh your swipes, so ${born.name} stays home.`
+      : `Your swipes outweigh your roots, so ${built.name} is where you fit.`;
+
+  return (
+    <>
+      <div className={styles.resultPair}>
+        <ClubCard label="Born to" name={born.name} color={born.color} percentage={born.percentage} />
+        <ClubCard label="Built for" name={built.name} color={built.color} percentage={built.percentage} />
+      </div>
+      <p className={styles.line}>{line}</p>
+    </>
   );
+}
+
+/**
+ * @param {{ label: string, name: string, color?: string|null, percentage?: number|null, note?: string }} props
+ */
+function ClubCard({ label, name, color, percentage, note }) {
+  return (
+    <div className={styles.arrivalBand} style={{ "--club": color || "#D8232A" }}>
+      <p className={styles.resultLabel}>{label}</p>
+      <h1 className={styles.arrivalName}>{name}</h1>
+      {note ? <p className={styles.arrivalMeta}>{note}</p> : null}
+      {percentage != null ? <p className={styles.arrivalScore}>{percentage}% match</p> : null}
+    </div>
+  );
+}
+
+/**
+ * The club the screen is treating as the answer.
+ *
+ * @param {ReturnType<typeof buildOutcome>} outcome
+ */
+function heroOf(outcome) {
+  if (!outcome.built) return null;
+  if (!outcome.born || outcome.born.typed || outcome.same || outcome.noRoots) return outcome.built;
+  if (outcome.leanWinner === "born") return outcome.born;
+  return outcome.built;
 }
