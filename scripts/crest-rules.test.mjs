@@ -18,7 +18,7 @@ const LEFT_POLE = {
   5: ["Look back", 9, -1],
   6: ["A 4-3", 4, -1],
   7: ["Build it", 6, -1],
-  8: ["Calm stroll", 1, -1],
+  8: ["A calm one", 1, -1],
   9: ["All planned", 5, -1],
   10: ["My street", 3, -1],
   11: ["Safe mid-table", 0, 1],
