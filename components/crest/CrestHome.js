@@ -11,21 +11,17 @@ const SCOPE_KEY = "crest:scope";
  * @param {string|null} group
  */
 export function readStoredScope() {
-  try {
-    const saved = window.localStorage.getItem(SCOPE_KEY);
-    if (!saved || saved === "everywhere") return null;
-    return CREST_REGIONS.includes(saved) ? saved : null;
-  } catch {
-    return null;
-  }
+  return null;
 }
 
 /**
- * @param {string|null} group
+ * A new run does not keep a scope. Anything previously stored is removed.
+ *
+ * @param {string|null} [_group]
  */
-export function writeStoredScope(group) {
+export function writeStoredScope(_group) {
   try {
-    window.localStorage.setItem(SCOPE_KEY, group || "everywhere");
+    window.localStorage.removeItem(SCOPE_KEY);
   } catch {
     /* ignore quota / private mode */
   }

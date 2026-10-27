@@ -1,21 +1,25 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { allowsBoth, PART_LABEL, TOTAL } from "@/lib/crest/cards";
+import { allowsBoth, PART_INDEX, PART_LABEL, TOTAL } from "@/lib/crest/cards";
 import { DEFAULT_ALPHA, nextCard } from "@/lib/crest/engine";
-import { buildScopeResults } from "@/lib/crest/results";
+import { EMPTY_ROOTS } from "@/lib/crest/roots";
+import { clearCrestRunStorage } from "@/lib/crest/session";
 import { stakeLine } from "@/lib/crest/stakes";
 import SwipeCard from "./SwipeCard";
 import CrestArrival from "./CrestArrival";
-import CrestHome, { readStoredScope, writeStoredScope } from "./CrestHome";
+import CrestHome from "./CrestHome";
 import CrestReport from "./CrestReport";
 import CrestReveal from "./CrestReveal";
+import CrestRoots from "./CrestRoots";
 import CrestWant from "./CrestWant";
 import styles from "./CrestSwipe.module.css";
 
+const RUN_TOTAL = 4 + TOTAL;
+
 /**
- * The Crest. Standalone play: home, one want, eighteen cards, arrival, report.
- * Answers and the chip live in component state for the session only.
+ * The Crest. Scope, roots, one want, twenty cards, arrival.
+ * A new run clears stored scope, answers, stake, and roots.
  *
  * @param {{embedded?: boolean}} [props]
  */
@@ -23,13 +27,14 @@ export default function CrestSwipe({ embedded = false }) {
   const [step, setStep] = useState("scope");
   const [group, setGroup] = useState(null);
   const [stake, setStake] = useState(null);
+  const [roots, setRoots] = useState(EMPTY_ROOTS);
   const [answers, setAnswers] = useState([]);
-  const [fcResults, setFcResults] = useState(null);
   const [drag, setDrag] = useState(0);
+  const [runId, setRunId] = useState(0);
   const boardRef = useRef(null);
 
   useEffect(() => {
-    setGroup(readStoredScope());
+    clearCrestRunStorage();
   }, []);
 
   const current = useMemo(
@@ -46,13 +51,15 @@ export default function CrestSwipe({ embedded = false }) {
 
   function setScope(next) {
     setGroup(next);
-    writeStoredScope(next);
   }
 
   function start() {
+    clearCrestRunStorage();
     setAnswers([]);
     setStake(null);
-    setStep("want");
+    setRoots(EMPTY_ROOTS);
+    setDrag(0);
+    setStep("roots");
   }
 
   function pickStake(id) {
@@ -71,7 +78,7 @@ export default function CrestSwipe({ embedded = false }) {
     setDrag(0);
     setAnswers(next);
     if (next.length >= TOTAL) {
-      setFcResults(buildScopeResults(next, { group, stake }));
+      setRunId((id) => id + 1);
       setStep("reveal");
     }
   }
@@ -86,9 +93,11 @@ export default function CrestSwipe({ embedded = false }) {
   }
 
   function restart() {
+    clearCrestRunStorage();
     setAnswers([]);
     setStake(null);
-    setFcResults(null);
+    setRoots(EMPTY_ROOTS);
+    setGroup(null);
     setDrag(0);
     setStep("scope");
   }
@@ -111,7 +120,6 @@ export default function CrestSwipe({ embedded = false }) {
           colour={null}
           onBack={() => setStep("arrival")}
           onRestart={restart}
-          fcResults={fcResults}
         />
       </div>
     );
@@ -130,16 +138,28 @@ export default function CrestSwipe({ embedded = false }) {
           answers={answers}
           group={group}
           stake={stake}
-          onOpenReport={() => setStep("report")}
+          roots={roots}
+          runId={runId}
           onRestart={restart}
-          fcResults={fcResults}
         />
       </div>
     );
   }
 
   if (step === "want") {
-    return <CrestWant onPick={pickStake} onBack={() => setStep("scope")} />;
+    return <CrestWant onPick={pickStake} onBack={() => setStep("roots")} />;
+  }
+
+  if (step === "roots") {
+    return (
+      <CrestRoots
+        onBack={() => setStep("scope")}
+        onDone={(next) => {
+          setRoots(next);
+          setStep("want");
+        }}
+      />
+    );
   }
 
   if (step === "scope" || !current) {
@@ -155,8 +175,9 @@ export default function CrestSwipe({ embedded = false }) {
 
   const index = answers.length;
   const card = current.card;
-  const percent = Math.round((index / TOTAL) * 100);
-  const showTurn = index === 5 && card.part !== 1;
+  const done = 4 + index;
+  const percent = Math.round((done / RUN_TOTAL) * 100);
+  const showTurn = card.part === "football" && index === 10;
   const chip = stakeLine(stake);
 
   return (
@@ -176,7 +197,8 @@ export default function CrestSwipe({ embedded = false }) {
             &larr;
           </button>
           <span className={styles.partLabel}>
-            {card.part} of 3 · {PART_LABEL[card.part]}
+            {PART_INDEX[card.part]} of 3 · {PART_LABEL[card.part]}
+            <span className={styles.chipLine}>{done} of {RUN_TOTAL}</span>
             {chip ? <span className={styles.chipLine}>{chip}</span> : null}
           </span>
           <button type="button" className={styles.restart} onClick={restart}>
@@ -187,8 +209,8 @@ export default function CrestSwipe({ embedded = false }) {
           className={styles.progressBar}
           role="progressbar"
           aria-valuemin={0}
-          aria-valuemax={TOTAL}
-          aria-valuenow={index}
+          aria-valuemax={RUN_TOTAL}
+          aria-valuenow={done}
         >
           <span style={{ width: `${percent}%` }} />
         </div>
