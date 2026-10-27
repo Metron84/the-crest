@@ -2,10 +2,12 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
+import { CARDS, TOTAL } from "@/lib/crest/cards";
 import { CLUBS, CREST_GROUP_LABEL, CREST_REGIONS } from "@/lib/crest/clubs";
 import styles from "./CrestHome.module.css";
 
 const SCOPE_KEY = "crest:scope";
+const TEASER = CARDS.find((card) => card.id === 1);
 
 /**
  * @param {string|null} group
@@ -101,7 +103,7 @@ export default function CrestHome({ group, onScope, onStart, backHref = "/games"
 
       <div className={styles.layout}>
         <div className={styles.copy}>
-          <h1 className={styles.headline}>Eighteen swipes. One club that sounds like you.</h1>
+          <h1 className={styles.headline}>Twenty swipes. One club that sounds like you.</h1>
           <p className={styles.subline}>Matched on heart, mind and soul</p>
         </div>
 
@@ -109,15 +111,15 @@ export default function CrestHome({ group, onScope, onStart, backHref = "/games"
           <span className={`${styles.card} ${styles.backTwo}`} aria-hidden="true" />
           <span className={`${styles.card} ${styles.backOne}`} aria-hidden="true" />
           <span key={hint} className={`${styles.card} ${styles.front}`}>
-            <span className={styles.cardKicker}>Card 1 of 18</span>
-            <span className={styles.cardQuestion}>Living is about fun, or work?</span>
+            <span className={styles.cardKicker}>Card 1 of {TOTAL}</span>
+            <span className={styles.cardQuestion}>{TEASER.q}</span>
             <span className={styles.cardRow}>
               <span className={styles.cardLeft}>
                 <ArrowOut left />
-                Fun
+                {TEASER.L}
               </span>
               <span className={styles.cardRight}>
-                Work
+                {TEASER.R}
                 <ArrowOut />
               </span>
             </span>
