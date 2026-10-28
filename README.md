@@ -35,7 +35,7 @@ Cards stay in this order. The stake does not reorder them. `s` is the line under
 | 10 | Likes | Known by your whole street, or famous for a day? | Deep local respect, or one big moment in the spotlight. | My street | Famous for a day | 3 Belonging / Glory | −1 Belonging | yes |
 | 11 | Football | Ten years safe in mid-table, or one title then relegation? | Steady survival, or one glory season and a fall. | Safe mid-table | Title, then down | 0 Winning / Enduring | +1 Enduring | no |
 | 12 | Football | Last day of the season: 3-0 up by half-time, or a 94th-minute winner? | Calm control, or the heart-attack finish. | 3-0 at half-time | 94th-minute winner | 1 Calm / Intense | −1 Calm | yes |
-| 13 | Football | Should your club sell out at home, or have fans in 50 countries? | A local institution, or a global brand. | Sell out at home | Fans worldwide | 8 Rooted / Global | −1 Rooted | yes |
+| 13 | Football | Should your club sell out at home, or have fans in 50 countries? | A full ground in one city, or supporters everywhere. | Sell out at home | Fans worldwide | 8 Rooted / Global | −1 Rooted | yes |
 | 14 | Football | 1-0 up with ten men. Park the bus, or go for the second? | Protect what you have, or take the risk. | Park the bus | Go for the second | 5 Planned / Gamble | −1 Planned | no |
 | 15 | Football | You win either way. With flair, or with defending? | Does how you win matter, or only that you win? | With flair | With defending | 4 Beautiful / Effective | −1 Beautiful | yes |
 | 16 | Football | Your club is broke. Do the fans save it, or a billionaire? | Fan ownership, or big money and big ambition. | The fans | A billionaire | 10 Local hands / Big capital | −1 Local hands | no |
@@ -89,7 +89,7 @@ P(Both)  ∝ exp(−k × |axis|)    only if Both is allowed
 
 The card's term is `weight × ln(P of the swipe)`. Weight is part weight × 0.7 if the facet has two cards × the stake coefficient. The club's score is the sum.
 
-Match percent is the weighted geometric mean of those probabilities, `exp(sum / totalWeight)`, shown from 0 to 100. Fifty is a coin flip. With no roots, 80 or above is "Your FC". Under 80 is "Closest match".
+Match percent is the weighted geometric mean of those probabilities, `exp(sum / totalWeight)`, shown from 0 to 100. Fifty is a coin flip. It is agreement, not a pass mark. With no roots, a clear leader is "Your FC". A close call, the leader's share under 1.5 times the runner-up, is "Closest match".
 
 The share used for a close call is the softmax of the log-likelihoods over the scope. It is a close call when the leader's share is under 1.5 times the runner-up's.
 
@@ -106,8 +106,8 @@ Scope is a hard filter on `region`: England, Germany, Italy, Spain, France, Rest
 - Same Born to and Built for: one card, "Your FC, by blood and by heart", with match percent.
 - They differ: "Born to" and "Built for" side by side, then either "Your roots outweigh your swipes, so [club] stays home." or "Your swipes outweigh your roots, so [club] is where you fit." The lean score picks the line. A tie stays with the swipes.
 - Born to is typed and not in the database: "Not on our list yet", and "We can't score [club] yet, so your swipes decide."
-- No roots: "Your FC" at 80% or above, otherwise "Closest match".
-- Close call: "Close call: [runner-up] is right behind at [x]%." The percent is the match percent.
+- No roots: "Your FC" when the leader is clearly ahead, "Closest match" on a close call. The gap line says how many points of agreement separate them.
+- Close call: "Close call: [runner-up] is right behind at [x]%." A clear leader says "[n] points ahead of [runner-up]."
 - Under that, "What decided it over [runner-up]" with the two deciding cards, the question and the answer.
 - "Your club in every league": England, Germany, Italy, Spain, France, Rest of the World. Each row is the top club from the same ranking, with match percent. Rest of the World opens Rest of Europe and Arab world. The row that holds the answer is highlighted.
 

@@ -124,7 +124,8 @@ If Born to and Built for are both in the database, the higher lean score is the 
 
 ## Result copy
 
-- No Born to: "Your FC" when match percent is 80 or above, otherwise "Closest match".
+- No Born to: "Your FC" when the leader is clearly ahead. "Closest match" on a close call. The 80 cut is not the label.
+- A clear leader: "[n] points ahead of [runner-up]."
 - Same club: "Your FC, by blood and by heart".
 - Two database clubs: the two cards, then "Your roots outweigh your swipes, so [club] stays home." or "Your swipes outweigh your roots, so [club] is where you fit."
 - Typed Born to: "Not on our list yet" and "We can't score [club] yet, so your swipes decide."
