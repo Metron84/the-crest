@@ -139,22 +139,25 @@ export default function CrestArrival({ answers, group, stake = null, roots = nul
       ) : null}
 
       <h2 className={styles.subhead}>Your club in every league</h2>
-      <ul className={styles.leagueList}>
-        {outcome.countries.flatMap((country) => country.leagues).map((league) => {
-          const hit = league.top?.slug && league.top.slug === heroSlug;
-          return (
-            <li key={league.competition}>
-              <div className={`${styles.leagueRow} ${hit ? styles.leagueRowOn : ""}`}>
-                <span className={styles.leagueTitle}>{league.label}</span>
-                <strong className={styles.leagueClub}>
-                  {league.top ? league.top.name : "No clubs in this league yet"}
-                </strong>
-                <span className={styles.leaguePct}>{league.top ? `${league.top.percentage}%` : ""}</span>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+      {outcome.countries.map((country) => (
+        <div key={country.country} className={styles.leagueCountry}>
+          <h3 className={styles.leagueCountryName}>{country.country}</h3>
+          <ul className={styles.leagueList}>
+            {country.leagues.map((league) => {
+              const hit = league.top?.slug && league.top.slug === heroSlug;
+              return (
+                <li key={league.competition}>
+                  <div className={`${styles.leagueRow} ${hit ? styles.leagueRowOn : ""}`}>
+                    <span className={styles.leagueTitle}>{league.label}</span>
+                    <strong className={styles.leagueClub}>{league.top.name}</strong>
+                    <span className={styles.leaguePct}>{league.top.percentage}%</span>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ))}
 
       <div className={styles.next}>
         <button type="button" className={styles.saveCta} onClick={saveResults} disabled={!ready}>
@@ -234,8 +237,9 @@ function ResultCards({ outcome }) {
     );
   }
 
-  const line =
-    outcome.leanWinner === "born"
+  const line = outcome.bornOutside
+    ? `${born.name} sits outside this want, so your swipes decide.`
+    : outcome.leanWinner === "born"
       ? `Your roots outweigh your swipes, so ${born.name} stays home.`
       : `Your swipes outweigh your roots, so ${built.name} is where you fit.`;
 

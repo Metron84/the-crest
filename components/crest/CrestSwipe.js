@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { allowsBoth, PART_INDEX, PART_LABEL, TOTAL } from "@/lib/crest/cards";
+import { allowsBoth, TOTAL } from "@/lib/crest/cards";
 import { DEFAULT_ALPHA, nextCard } from "@/lib/crest/engine";
 import { EMPTY_ROOTS } from "@/lib/crest/roots";
 import { clearCrestRunStorage } from "@/lib/crest/session";
@@ -18,7 +18,7 @@ import styles from "./CrestSwipe.module.css";
 const RUN_TOTAL = 4 + TOTAL;
 
 /**
- * The Crest. Scope, roots, one want, twenty cards, arrival.
+ * The Crest. Scope, roots, one want, eight cards, arrival.
  * A new run clears stored scope, answers, stake, and roots.
  *
  * @param {{embedded?: boolean}} [props]
@@ -177,7 +177,6 @@ export default function CrestSwipe({ embedded = false }) {
   const card = current.card;
   const done = 4 + index;
   const percent = Math.round((done / RUN_TOTAL) * 100);
-  const showTurn = card.part === "football" && index === 10;
   const stakeName = getStake(stake)?.label || "";
 
   return (
@@ -197,7 +196,7 @@ export default function CrestSwipe({ embedded = false }) {
             &larr;
           </button>
           <span className={styles.partLabel}>
-            {PART_INDEX[card.part]} of 3 · {PART_LABEL[card.part]}
+            {index + 1} of {TOTAL}
             <span className={styles.chipLine}>{done} of {RUN_TOTAL}</span>
           </span>
           <button type="button" className={styles.restart} onClick={restart}>
@@ -217,7 +216,6 @@ export default function CrestSwipe({ embedded = false }) {
       </header>
 
       <section className={styles.play} aria-live="polite">
-        {showTurn ? <p className={styles.turn}>Now the club.</p> : null}
         <div className={styles.stage}>
           <SwipeCard key={card.id} card={card} index={index} onAnswer={answer} onDrag={onDrag} />
         </div>

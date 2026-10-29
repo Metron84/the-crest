@@ -4,133 +4,63 @@ What the engine and the quiz do now. `lib/crest/engine.js`, `cards.js`, `stakes.
 
 ## Flow
 
-1. Scope. Everywhere, or one region: England, Germany, Italy, Spain, France, Rest of the World. This is a hard filter. A club outside it cannot win the swipe ranking.
+1. Scope. Everywhere, or one region: England, Germany, Italy, Spain, France, Rest of the World. This is a hard filter. A club outside it cannot win.
 2. Roots. Four taps. See below.
-3. Stake. One of Belonging, Winning, Belonging and winning, Fame and fortune, Fortune, Love. It multiplies weights. It does not reorder cards.
-4. Twenty swipes, in deck order.
+3. Want. One of Belonging, Love, Winning, Belonging and love, Love and winning. The want chooses the deck and the club pool. It does not multiply weights.
+4. Eight swipes, in that deck's order.
 5. Reveal, then the result screen.
 
 A new run sets answers, stake, roots, and card order back to empty, and scope back to everywhere when the player restarts. `clearCrestRunStorage` removes every `crest:*` key in localStorage and sessionStorage except the swipe hint `crest:hintSeen`. The quiz does not read a stored scope.
 
-Progress is 4 roots taps + 20 swipes = 24.
+Progress is 4 roots taps + 8 swipes = 12.
+
+A stored stake of `belonging_winning`, `fame_fortune`, or `fortune` is not a want. That run returns to the want menu.
 
 ## Deck
 
-Fixed order, ids 1 to 20. Part weights: life 0.7, likes 0.75, football 1.
+Five decks of eight cards, one trait each. The want picks the deck. A left swipe stores `leftValue`. A right swipe stores `-leftValue`. Both stores 0, and only where the card allows it.
 
-A left swipe stores `leftValue`. A right swipe stores `-leftValue`. Both stores 0. Both is refused on cards 11, 14, 16, 17, 19, and 20.
+The decks live in `lib/crest/cards.js`. Belonging is ids 1 to 8, Love 11 to 18, Winning 21 to 28, Belonging and love 31 to 38, Love and winning 41 to 48.
 
-| Id | Part | Left | Right | Facet | leftValue | Both |
-|---|---|---|---|---|---|---|
-| 1 | life | My gut | The numbers | 7 | +1 | yes |
-| 2 | life | Perfect moment | Something that lasts | 0 | −1 | yes |
-| 3 | life | With people | On my own | 2 | +1 | yes |
-| 4 | life | Close to home | On the road | 8 | −1 | yes |
-| 5 | life | Look back | Look ahead | 9 | −1 | yes |
-| 6 | likes | A 4-3 | A 1-0 grind | 4 | −1 | yes |
-| 7 | likes | Build it | Buy it | 6 | −1 | yes |
-| 8 | likes | Calm stroll | Rollercoaster | 1 | −1 | yes |
-| 9 | likes | All planned | No plan | 5 | −1 | yes |
-| 10 | likes | My street | Famous for a day | 3 | −1 | yes |
-| 11 | football | Safe mid-table | Title, then down | 0 | +1 | no |
-| 12 | football | 3-0 at half-time | 94th-minute winner | 1 | −1 | yes |
-| 13 | football | Sell out at home | Fans worldwide | 8 | −1 | yes |
-| 14 | football | Park the bus | Go for the second | 5 | −1 | no |
-| 15 | football | With flair | With defending | 4 | −1 | yes |
-| 16 | football | The fans | A billionaire | 10 | −1 | no |
-| 17 | football | Old ground | New stadium | 9 | −1 | no |
-| 18 | football | Beat the rival | Win the cup | 3 | −1 | yes |
-| 19 | football | Sack him | Keep faith | 7 | −1 | no |
-| 20 | football | Never | Sign him | 11 | −1 | no |
+## Score
 
-Each card's `s` line is shown under the question.
-
-Negative is the left-named pole. Positive is the right-named pole. Cards 1, 3, and 11 are the ones whose left label is the right-named pole, so a left swipe stores +1.
-
-## Weights
+The club's place on a trait is `0.5 × self + 0.5 × others`. One voice, if the other is missing. Both missing, and the trait drops out. Missing is not 0.
 
 ```
-weight = partWeight × (0.7 if the facet has two cards in the deck, else 1) × stakeCoeff
+suit = mean of (1 - |swipe - place| / 2)
 ```
 
-Facets with two cards: 0, 1, 3, 4, 5, 7, 8, 9.
+The percentage is that mean times 100, rounded. Same place is 100. Opposite poles is 0. No answers is 50.
 
-Stake coefficients are only 2, 1.4, or 1. Nothing is zeroed.
+The ranking is the clubs in the want's pool, inside the chosen scope. Sorted by suit, then the closest single trait, then name, then slug.
 
-| Stake | ×2 | ×1.4 |
-|---|---|---|
-| Belonging | 3 meaning, 2 openness, 8 reach | 9 time, 10 power, 11 purpose |
-| Winning | 0 winning, 11 purpose | 3 meaning, 4 style |
-| Belonging and winning | 0 winning, 3 meaning, 11 purpose | 2 openness, 8 reach |
-| Fame and fortune | 8 reach, 10 power, 3 meaning | 6 talent, 11 purpose |
-| Fortune | 10 power, 6 talent | 0 winning, 8 reach, 3 meaning |
-| Love | 7 head/heart, 1 climate, 4 style | 3 meaning, 11 purpose |
+A close call is a gap of fewer than 3 points. At 3 points it is not a close call.
 
-The `life` arrays in `stakes.js` are not read.
+There is no card weight, no stake coefficient, and no steepness. `nextCard` walks the want's deck.
 
-## Club blend
-
-```
-0.6 × self + 0.4 × others
-```
-
-One masked voice: use the other. Both masked: the facet is missing. Missing is not 0.
-
-`K = 3.0`, uncalibrated. Steepness `k = K × confidence`. Confidence is 1, or 0.6 for a thin file. A thin file is not pulled toward the middle. Its curve is flatter.
-
-```
-P(left)  ∝ exp(k × axis × leftValue)
-P(right) ∝ exp(k × axis × −leftValue)
-P(Both)  ∝ exp(−k × |axis|)     when Both is allowed
-```
-
-Normalized to sum to 1. A club missing the facet uses the mean of that swipe's probability across every club that has evidence on the facet. The same mean is used for every club missing it, so the card does not separate them.
-
-Term = `weight × ln(P)`. Club score = sum of terms.
-
-## One ranking
-
-Every club in scope. Sorted by log-likelihood, then distinctiveness, then name, then slug.
-
-Distinctiveness is the Euclidean norm of the blended z-scores on facets that have evidence. It is a tiebreak only.
-
-Match percent = `round(exp(logLikelihood / totalWeight) × 100)`, clipped to 0–100. With no answers it is 50.
-
-Softmax share is `exp(logLikelihood)` normalized over this same list. Close call when the leader's share is under 1.5 times the runner-up's. At exactly 1.5 it is not a close call.
-
-There is no Life gate, no opposite-side cut, no top-3 protection, and no three-club floor. `playPool` returns the scoped list and does not remove clubs.
-
-`nextCard` returns the first unused card in deck order.
-
-Region rows, league rows, and colour rows keep this order and drop the clubs that are outside the filter. They do not softmax again.
-
-The two deciding cards are the answers with the largest `(heroTerm − runnerTerm)`. Tie: lower card id.
+The two deciding cards are the answers with the largest suit gap. Tie: lower card id.
 
 ## Roots prior
 
 Mass, before renormalising: family 0.55, grew up 0.30, hooked 0.15. The same database slug adds its weights. Divide by the sum of those weights. A typed name is not in this map.
 
-`P = 0.15 / N + 0.85 × mass` for a named database club. Unnamed clubs in scope get `0.15 / N`. N is the size of the scoped ranking. With no database club named, P is `1 / N` and λ is 0.
-
-λ: Always 1, Probably 0.6, I'd drift 0.15, no database club 0.
-
-Lean = `λ × ln(P) + logLikelihood`.
-
 Born to = highest mass among named identities, typed included. Ties: name, then slug.
 
-Built for = top of the swipe ranking. The prior does not move Built for.
+Built for = top of the suit ranking. The prior does not move Built for.
 
-If Born to and Built for are both in the database, the higher lean score is the one the result line names. A tie stays with Built for.
+If Born to is outside the want's pool, the line says the swipes decide. If both clubs are in the pool, the higher suit is the one the result line names. A tie stays with Built for.
+
 
 ## Result copy
 
 - No Born to: "Your FC" when the leader is clearly ahead. "Closest match" on a close call. The 80 cut is not the label.
 - A clear leader: "[n] points ahead of [runner-up]."
 - Same club: "Your FC, by blood and by heart".
-- Two database clubs: the two cards, then "Your roots outweigh your swipes, so [club] stays home." or "Your swipes outweigh your roots, so [club] is where you fit."
+- Two database clubs in the pool: the two cards, then "Your roots outweigh your swipes, so [club] stays home." or "Your swipes outweigh your roots, so [club] is where you fit."
+- Born to outside the want: "[club] sits outside this want, so your swipes decide."
 - Typed Born to: "Not on our list yet" and "We can't score [club] yet, so your swipes decide."
 - Close call line uses the runner-up's match percent.
-- League rows, in order: England, Germany, Italy, Spain, France, Rest of the World. Rest of the World opens "Rest of Europe" and "Arab world". The row that holds the answer is highlighted. An empty filter says "None in this search".
+- League list: England, Spain, Italy, Germany, France, then Rest of the World. Each heading shows that place's leagues, with the top club in the want's pool and that club's suit percentage. A league with nobody in the pool is omitted. Wales stays under England. Monaco stays under France. The winner's row is highlighted.
 
 ## Save
 

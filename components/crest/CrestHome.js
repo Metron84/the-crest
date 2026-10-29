@@ -103,7 +103,7 @@ export default function CrestHome({ group, onScope, onStart, backHref = "/games"
 
       <div className={styles.layout}>
         <div className={styles.copy}>
-          <h1 className={styles.headline}>Twenty swipes. One club that sounds like you.</h1>
+          <h1 className={styles.headline}>Eight swipes. One club that sounds like you.</h1>
           <p className={styles.subline}>Matched on heart, mind and soul</p>
         </div>
 
