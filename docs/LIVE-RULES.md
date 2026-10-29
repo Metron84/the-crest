@@ -7,20 +7,20 @@ What the engine and the quiz do now. `lib/crest/engine.js`, `cards.js`, `stakes.
 1. Scope. Everywhere, or one region: England, Germany, Italy, Spain, France, Rest of the World. This is a hard filter. A club outside it cannot win.
 2. Roots. Four taps. See below.
 3. Want. One of Belonging, Love, Winning, Belonging and love, Love and winning. The want chooses the deck and the club pool. It does not multiply weights.
-4. Eight swipes, in that deck's order.
+4. Ten swipes, in that deck's order.
 5. Reveal, then the result screen.
 
 A new run sets answers, stake, roots, and card order back to empty, and scope back to everywhere when the player restarts. `clearCrestRunStorage` removes every `crest:*` key in localStorage and sessionStorage except the swipe hint `crest:hintSeen`. The quiz does not read a stored scope.
 
-Progress is 4 roots taps + 8 swipes = 12.
+Progress is 4 roots taps + 10 swipes = 14.
 
 A stored stake of `belonging_winning`, `fame_fortune`, or `fortune` is not a want. That run returns to the want menu.
 
 ## Deck
 
-Five decks of eight cards, one trait each. The want picks the deck. A left swipe stores `leftValue`. A right swipe stores `-leftValue`. Both stores 0, and only where the card allows it.
+Five decks of ten cards. Three are about the footballer's temperament and mindset. Three are about the manager's. Two are about the chairman. Two are about belonging to the people who make the club. The want picks the deck. A left swipe stores `leftValue`. A right swipe stores `-leftValue`. Both stores 0, and only where the card allows it. Each card is one trait the club file already scores, read 50/50 from the two voices.
 
-The decks live in `lib/crest/cards.js`. Belonging is ids 1 to 8, Love 11 to 18, Winning 21 to 28, Belonging and love 31 to 38, Love and winning 41 to 48.
+The decks live in `lib/crest/cards.js`. Belonging is ids 1 to 10, Love 11 to 20, Winning 21 to 30, Belonging and love 31 to 40, Love and winning 41 to 50.
 
 ## Score
 

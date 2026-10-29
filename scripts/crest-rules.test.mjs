@@ -8,65 +8,27 @@ import { categoryOf, clubsForStake } from "../lib/crest/pools.js";
 import { STAKES } from "../lib/crest/stakes.js";
 import { liveStake } from "../lib/crest/stakes.js";
 
-const LEFT = {
-  belonging: [
-    ["Only ours", 2, -1, true],
-    ["Our people", 10, -1, false],
-    ["The old ground", 9, -1, false],
-    ["I stay", 7, 1, true],
-    ["We can sit", 1, -1, true],
-    ["Our streets", 6, -1, true],
-    ["Careful", 5, -1, false],
-    ["Our city", 8, -1, true],
-  ],
-  love: [
-    ["The way they play", 4, -1, true],
-    ["Even then", 7, 1, true],
-    ["One city", 8, -1, true],
-    ["The old shirt", 9, -1, true],
-    ["One night", 0, -1, true],
-    ["They have to stay ours", 10, -1, false],
-    ["The people", 3, -1, true],
-    ["One I can trust", 5, -1, true],
-  ],
-  winning: [
-    ["The title", 0, -1, false],
-    ["Build it", 6, -1, false],
-    ["See it out", 5, -1, false],
-    ["The rival", 3, -1, true],
-    ["The city", 8, -1, true],
-    ["3-0", 1, -1, true],
-    ["Sack him", 7, -1, false],
-    ["Our own money", 10, -1, false],
-  ],
-  belonging_love: [
-    ["Only ours", 2, -1, true],
-    ["Our people", 10, -1, false],
-    ["The old ground", 9, -1, false],
-    ["Home", 8, -1, true],
-    ["Because I love them", 7, 1, true],
-    ["The football", 4, -1, true],
-    ["One night", 0, -1, true],
-    ["Careful", 5, -1, true],
-  ],
-  love_winning: [
-    ["The title", 0, -1, false],
-    ["Principles", 11, -1, false],
-    ["The city", 8, -1, true],
-    ["The people", 3, -1, true],
-    ["Controlled", 1, -1, true],
-    ["See it out", 5, -1, false],
-    ["Keep him", 7, 1, true],
-    ["Beautifully", 4, -1, true],
-  ],
-};
+const POLES = [
+  ["A calm one", 1, -1, true],
+  ["From the heart", 7, 1, true],
+  ["How he plays", 4, -1, true],
+  ["A careful plan", 5, -1, false],
+  ["For the life", 0, 1, true],
+  ["Stands for something", 11, -1, false],
+  ["One of ours", 10, -1, false],
+  ["Keeps what we have", 9, -1, false],
+  ["The people who make it", 2, -1, true],
+  ["Those people", 3, -1, true],
+];
 
-test("each want has eight cards and the left pole it stores", () => {
-  assert.equal(TOTAL, 8);
+const LEFT = Object.fromEntries(STAKES.map((row) => [row.id, POLES]));
+
+test("each want has ten cards and the left pole it stores", () => {
+  assert.equal(TOTAL, 10);
   assert.deepEqual(STAKES.map((row) => row.id), Object.keys(LEFT));
   for (const [id, expected] of Object.entries(LEFT)) {
     const deck = DECKS[id];
-    assert.equal(deck.length, 8);
+    assert.equal(deck.length, 10);
     deck.forEach((card, index) => {
       const [label, facet, leftValue, both] = expected[index];
       assert.equal(card.L, label);
@@ -112,9 +74,9 @@ test("Slavia Prague is Belonging and the five pools cover every club", () => {
 
 test("three Belonging answers put Millwall at 60 and Brighton at 25", () => {
   const answers = [
-    { cardId: 1, value: -1 },
-    { cardId: 3, value: -1 },
-    { cardId: 2, value: -1 },
+    { cardId: 9, value: -1 },
+    { cardId: 8, value: -1 },
+    { cardId: 7, value: -1 },
   ];
   const ranked = rankClubs(answers, undefined, { stake: "belonging" });
   const millwall = ranked.find((row) => row.club.slug === "millwall");

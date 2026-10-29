@@ -1,8 +1,8 @@
 # The Crest
 
-Eight swipes, then the club.
+Ten swipes, then the club.
 
-The Crest is a swipe game from The Reflective Football. You pick where to look, answer four questions about how you came to football, say what you want a club for, then swipe eight cards. The engine names the club you were born to and the club you are built for.
+The Crest is a swipe game from The Reflective Football. You pick where to look, answer four questions about how you came to football, say what you want a club for, then swipe ten cards. The engine names the club you were born to and the club you are built for.
 
 ## Run it
 
@@ -19,9 +19,9 @@ node scripts/validate-clubs.mjs research/all-clubs.json
 
 ## The deck
 
-Five decks of eight cards. The want chooses the deck. A left swipe stores `leftValue`. A right swipe stores the opposite. Both stores 0, and only where the card allows it. The cards are in `lib/crest/cards.js`.
+Five decks of ten cards. Three ask about the footballer, three about the manager, two about the chairman, and two about the people who make the club. The want chooses the deck. A left swipe stores `leftValue`. A right swipe stores the opposite. Both stores 0, and only where the card allows it. The cards are in `lib/crest/cards.js`.
 
-Progress is 4 roots taps plus these 8 swipes, 12 in all.
+Progress is 4 roots taps plus these 10 swipes, 14 in all.
 
 ## Roots
 

@@ -18,7 +18,7 @@ import styles from "./CrestSwipe.module.css";
 const RUN_TOTAL = 4 + TOTAL;
 
 /**
- * The Crest. Scope, roots, one want, eight cards, arrival.
+ * The Crest. Scope, roots, one want, ten cards, arrival.
  * A new run clears stored scope, answers, stake, and roots.
  *
  * @param {{embedded?: boolean}} [props]
