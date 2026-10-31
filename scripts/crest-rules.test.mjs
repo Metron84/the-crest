@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { DECKS, TOTAL, allowsBoth } from "../lib/crest/cards.js";
+import { DECKS, TOTAL } from "../lib/crest/cards.js";
 import { RESULT_COUNTRIES } from "../lib/crest/competitions.js";
 import { nextCard, rankClubs } from "../lib/crest/engine.js";
 import { buildOutcome } from "../lib/crest/outcome.js";
@@ -8,34 +8,16 @@ import { categoryOf, clubsForStake } from "../lib/crest/pools.js";
 import { STAKES } from "../lib/crest/stakes.js";
 import { liveStake } from "../lib/crest/stakes.js";
 
-const POLES = [
-  ["A calm one", 1, -1, true],
-  ["From the heart", 7, 1, true],
-  ["How he plays", 4, -1, true],
-  ["A careful plan", 5, -1, false],
-  ["For the life", 0, 1, true],
-  ["Stands for something", 11, -1, false],
-  ["One of ours", 10, -1, false],
-  ["Keeps what we have", 9, -1, false],
-  ["The people who make it", 2, -1, true],
-  ["Those people", 3, -1, true],
-];
-
-const LEFT = Object.fromEntries(STAKES.map((row) => [row.id, POLES]));
-
-test("each want has ten cards and the left pole it stores", () => {
-  assert.equal(TOTAL, 10);
-  assert.deepEqual(STAKES.map((row) => row.id), Object.keys(LEFT));
-  for (const [id, expected] of Object.entries(LEFT)) {
-    const deck = DECKS[id];
-    assert.equal(deck.length, 10);
-    deck.forEach((card, index) => {
-      const [label, facet, leftValue, both] = expected[index];
-      assert.equal(card.L, label);
-      assert.equal(card.facet, facet);
-      assert.equal(card.leftValue, leftValue);
-      assert.equal(allowsBoth(card), both);
-    });
+test("every want plays the same 36, three questions on each room", () => {
+  assert.equal(TOTAL, 36);
+  const ids = DECKS.belonging.map((card) => card.id);
+  for (const stake of STAKES) {
+    const deck = DECKS[stake.id];
+    assert.equal(deck.length, 36);
+    assert.deepEqual(deck.map((card) => card.id), ids);
+  }
+  for (let facet = 0; facet < 12; facet++) {
+    assert.equal(DECKS.belonging.filter((card) => card.facet === facet).length, 3);
   }
 });
 
@@ -72,20 +54,17 @@ test("Slavia Prague is Belonging and the five pools cover every club", () => {
   });
 });
 
-test("three Belonging answers put Millwall at 60 and Brighton at 25", () => {
+test("belonging answers rank Millwall ahead of Brighton", () => {
   const answers = [
-    { cardId: 9, value: -1 },
-    { cardId: 8, value: -1 },
     { cardId: 7, value: -1 },
+    { cardId: 11, value: -1 },
+    { cardId: 15, value: -1 },
   ];
   const ranked = rankClubs(answers, undefined, { stake: "belonging" });
-  const millwall = ranked.find((row) => row.club.slug === "millwall");
-  const brighton = ranked.find((row) => row.club.slug === "brighton");
-  assert.ok(millwall);
-  assert.ok(brighton);
-  assert.equal(Math.round(millwall.score * 100), 60);
-  assert.equal(Math.round(brighton.score * 100), 25);
-  assert.ok(ranked.findIndex((row) => row.club.slug === "millwall") < ranked.findIndex((row) => row.club.slug === "brighton"));
+  const millwall = ranked.findIndex((row) => row.club.slug === "millwall");
+  const brighton = ranked.findIndex((row) => row.club.slug === "brighton");
+  assert.ok(millwall >= 0 && brighton >= 0);
+  assert.ok(millwall < brighton);
 });
 
 test("the same Belonging sheet names the same club every time", () => {

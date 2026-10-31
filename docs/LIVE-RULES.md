@@ -18,9 +18,9 @@ A stored stake of `belonging_winning`, `fame_fortune`, or `fortune` is not a wan
 
 ## Deck
 
-Five decks of ten cards. Three are about the footballer's temperament and mindset. Three are about the manager's. Two are about the chairman. Two are about belonging to the people who make the club. The want picks the deck. A left swipe stores `leftValue`. A right swipe stores `-leftValue`. Both stores 0, and only where the card allows it. Each card is one trait the club file already scores, read 50/50 from the two voices.
+One deck of thirty-six cards. Three different questions on each of the twelve rooms. Life is the first five. Every want plays the same deck. The want still chooses which clubs can win. A left swipe stores `leftValue`. A right swipe stores `-leftValue`. Both stores 0, and only where the card allows it. Each card is one trait the club file already scores, read 50/50 from the two voices.
 
-The decks live in `lib/crest/cards.js`. Belonging is ids 1 to 10, Love 11 to 20, Winning 21 to 30, Belonging and love 31 to 40, Love and winning 41 to 50.
+The deck lives in `lib/crest/cards.js`. Ids 1 to 36.
 
 ## Score
 
