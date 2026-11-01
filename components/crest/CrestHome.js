@@ -140,7 +140,7 @@ export default function CrestHome({ group, onScope, onStart, backHref = "/games"
           >
             Searching {scopeName} · <span>Change</span>
           </button>
-          <p className={styles.voices}>How each club sees itself, and how the game sees it.</p>
+          <p className={styles.voices}>Where both voices agree. A fight stays a fight.</p>
         </div>
       </div>
 

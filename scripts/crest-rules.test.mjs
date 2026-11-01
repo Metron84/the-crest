@@ -1,12 +1,36 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { DECKS, TOTAL } from "../lib/crest/cards.js";
+import { BINARY_CARD_IDS, CARDS, DECKS, TOTAL } from "../lib/crest/cards.js";
 import { RESULT_COUNTRIES } from "../lib/crest/competitions.js";
-import { nextCard, rankClubs } from "../lib/crest/engine.js";
+import { nextCard, rankClubs, readFacet } from "../lib/crest/engine.js";
 import { buildOutcome } from "../lib/crest/outcome.js";
 import { categoryOf, clubsForStake } from "../lib/crest/pools.js";
 import { STAKES } from "../lib/crest/stakes.js";
 import { liveStake } from "../lib/crest/stakes.js";
+
+test("doors weigh more than likes, and a fight is not a blend", () => {
+  const door = CARDS.find((card) => card.id === 14);
+  const like = CARDS.find((card) => card.id === 6);
+  const life = CARDS.find((card) => card.id === 1);
+  const situation = CARDS.find((card) => card.id === 21);
+  assert.equal(door.weight, 2);
+  assert.equal(like.weight, 1);
+  assert.equal(life.weight, 1.5);
+  assert.equal(situation.weight, 1.5);
+  assert.ok(BINARY_CARD_IDS.every((id) => CARDS.find((card) => card.id === id).weight === 2));
+  const fight = {
+    slug: "fight",
+    name: "Fight",
+    self: Array(12).fill(0.6),
+    others: Array(12).fill(-0.6),
+    selfMask: Array(12).fill(true),
+    othersMask: Array(12).fill(true),
+  };
+  fight.self[0] = 1;
+  fight.others[0] = -1;
+  assert.equal(readFacet(fight, 0).contested, true);
+  assert.equal(readFacet(fight, 1).contested, true);
+});
 
 test("every want plays the same 36, three questions on each room", () => {
   assert.equal(TOTAL, 36);

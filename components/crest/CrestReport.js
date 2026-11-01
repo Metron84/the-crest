@@ -12,9 +12,9 @@ import styles from "./CrestReport.module.css";
 const GROUPS = ["Heart", "Mind", "Soul"];
 
 const VIEW_CAPTION = {
-  blend: "60% how they see themselves, 40% how others see them.",
-  self: "Only the club's own voice.",
-  others: "Only rivals, press and neutrals.",
+  blend: "Where both voices agree. A fight stays a fight.",
+  self: "Only what the club says about itself.",
+  others: "Only what others say about them.",
 };
 
 /**
@@ -127,13 +127,13 @@ export default function CrestReport({ answers, group, colour, stake = null, onBa
           <h2 className={styles.headingSmall}>Whose view of the club?</h2>
           <div className={styles.segment} role="group" aria-label="Club voice">
             <ViewButton active={view === "blend"} onClick={() => setView("blend")}>
-              Blend
+              The truth
             </ViewButton>
             <ViewButton active={view === "self"} onClick={() => setView("self")}>
               Their words
             </ViewButton>
             <ViewButton active={view === "others"} onClick={() => setView("others")}>
-              Rival eyes
+              Others
             </ViewButton>
           </div>
           <div className={styles.captionRow}>
@@ -208,7 +208,11 @@ function FacetTrack({ facet, clubName }) {
   const left = Math.min(facet.youPos, facet.themPos);
   const width = Math.abs(facet.youPos - facet.themPos);
   const gapClass =
-    facet.tag === "Shared" ? styles.gapShared : facet.tag === "The rub" ? styles.gapRub : styles.gap;
+    facet.tag === "Shared"
+      ? styles.gapShared
+      : facet.tag === "The rub" || facet.tag === "Split"
+        ? styles.gapRub
+        : styles.gap;
 
   return (
     <div className={styles.facet}>
@@ -216,7 +220,7 @@ function FacetTrack({ facet, clubName }) {
         <span className={styles.facetName}>{facet.name}</span>
         <span
           className={
-            facet.tag === "The rub"
+            facet.tag === "The rub" || facet.tag === "Split"
               ? styles.tagRub
               : facet.tag === "Shared"
                 ? styles.tagShared

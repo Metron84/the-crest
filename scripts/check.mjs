@@ -127,13 +127,13 @@ for (const [id, deck] of Object.entries(DECKS)) {
     console.log(`FAIL deck: ${id} has ${deck.length}`);
   }
 }
-if (CARDS.some((c) => !c.context)) {
+if (CARDS.some((c) => !c.context || !c.leftNote || !c.rightNote)) {
   failures++;
-  console.log("FAIL deck: every card needs a context line");
+  console.log("FAIL deck: every card needs a context line and option notes");
 }
-if (CARDS.some((c) => c.context && /\u2014|\u2013/.test(c.context))) {
+if (CARDS.some((c) => [c.context, c.leftNote, c.rightNote].some((line) => line && /\u2014|\u2013/.test(line)))) {
   failures++;
-  console.log("FAIL deck: em-dash in card context");
+  console.log("FAIL deck: em-dash in card copy");
 }
 if (BINARY_CARD_IDS.some((id) => allowsBoth(CARDS.find((c) => c.id === id)))) {
   failures++;
