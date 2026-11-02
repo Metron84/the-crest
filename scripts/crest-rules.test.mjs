@@ -70,25 +70,25 @@ test("Slavia Prague is Belonging and the five pools cover every club", () => {
   assert.equal(categoryOf("slavia-prague"), "belonging");
   const counts = Object.fromEntries(STAKES.map((row) => [row.id, clubsForStake(row.id).length]));
   assert.deepEqual(counts, {
-    belonging: 41,
-    love: 64,
-    winning: 33,
-    belonging_love: 59,
-    love_winning: 18,
+    belonging: 14,
+    love: 40,
+    winning: 30,
+    belonging_love: 39,
+    love_winning: 17,
   });
 });
 
-test("belonging answers rank Millwall ahead of Brighton", () => {
+test("belonging answers rank Everton ahead of Brighton", () => {
   const answers = [
     { cardId: 7, value: -1 },
     { cardId: 11, value: -1 },
     { cardId: 15, value: -1 },
   ];
   const ranked = rankClubs(answers, undefined, { stake: "belonging" });
-  const millwall = ranked.findIndex((row) => row.club.slug === "millwall");
+  const everton = ranked.findIndex((row) => row.club.slug === "everton");
   const brighton = ranked.findIndex((row) => row.club.slug === "brighton");
-  assert.ok(millwall >= 0 && brighton >= 0);
-  assert.ok(millwall < brighton);
+  assert.ok(everton >= 0 && brighton >= 0);
+  assert.ok(everton < brighton);
 });
 
 test("the same Belonging sheet names the same club every time", () => {

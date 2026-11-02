@@ -19,16 +19,10 @@ const WRITE = process.argv.includes("--write");
 
 const FILE_TO_COMP = {
   "Premier_League_2026-27.json": "Premier League",
-  "EFL_Championship_2026-27.json": "Championship",
-  "EFL_League_One_2026-27.json": "League One",
   "LaLiga_2026-27.json": "LaLiga",
-  "LaLiga_2_2026-27.json": "LaLiga 2",
   "Serie_A_2026-27.json": "Serie A",
-  "Serie_B_2026-27.json": "Serie B",
   "Bundesliga_2026-27.json": "Bundesliga",
-  "2_Bundesliga_2026-27.json": "2. Bundesliga",
   "Ligue_1_2026-27.json": "Ligue 1",
-  "Ligue_2_2026-27.json": "Ligue 2",
 };
 
 function normalize(name) {

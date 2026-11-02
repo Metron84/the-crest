@@ -17,11 +17,11 @@ let failures = 0;
 
 console.log(`clubs: ${CLUBS.length}`);
 const GROUP_COUNTS = {
-  England: 64,
-  Germany: 36,
-  Italy: 25,
-  Spain: 25,
-  France: 21,
+  England: 20,
+  Germany: 18,
+  Italy: 20,
+  Spain: 20,
+  France: 18,
   "Rest of the World": 44,
 };
 if (CREST_GROUPS.join(",") !== "England,Germany,Italy,Spain,France,Rest of the World") {
@@ -41,16 +41,10 @@ if (CLUBS.some((c) => c.country === "Italy" && c.group !== "Italy")) {
 }
 const PYRAMID_REGION = {
   "Premier League": "England",
-  Championship: "England",
-  "League One": "England",
   "Serie A": "Italy",
-  "Serie B": "Italy",
   LaLiga: "Spain",
-  "LaLiga 2": "Spain",
   Bundesliga: "Germany",
-  "2. Bundesliga": "Germany",
   "Ligue 1": "France",
-  "Ligue 2": "France",
 };
 for (const club of CLUBS) {
   const expected = PYRAMID_REGION[club.competition] || "Rest of the World";
@@ -60,8 +54,6 @@ for (const club of CLUBS) {
   }
 }
 const regionCases = [
-  ["cardiff-city", "England", "Wales", "Championship"],
-  ["swansea-city", "England", "Wales", "Championship"],
   ["monaco", "France", "Monaco", "Ligue 1"],
 ];
 for (const [slug, region, country, competition] of regionCases) {
@@ -105,9 +97,9 @@ if (competitionCounts["Premier League"] !== 20) {
   failures++;
   console.log(`FAIL competitions: Premier League has ${competitionCounts["Premier League"]}, expected 20`);
 }
-if (competitionCounts.Championship !== 20) {
+if (competitionCounts.Championship) {
   failures++;
-  console.log(`FAIL competitions: Championship has ${competitionCounts.Championship}, expected 20`);
+  console.log(`FAIL competitions: Championship still has ${competitionCounts.Championship} clubs`);
 }
 
 if (TOTAL !== 36 || CARDS.length !== 36) {
@@ -140,16 +132,10 @@ if (BINARY_CARD_IDS.some((id) => allowsBoth(CARDS.find((c) => c.id === id)))) {
   console.log("FAIL deck: a decision card still allows Both");
 }
 
-const westHam = CLUBS.find((c) => c.slug === "west-ham-united");
-if (
-  !westHam ||
-  westHam.self[9] !== -0.3 ||
-  westHam.others[9] !== -0.3 ||
-  westHam.others[7] !== -0.3 ||
-  westHam.othersMask[7] !== true
-) {
+const everton = CLUBS.find((c) => c.slug === "everton");
+if (!everton || everton.competition !== "Premier League") {
   failures++;
-  console.log("FAIL west-ham: terrace stamp missing (old ground / sack him)");
+  console.log("FAIL everton: missing from the Premier League set");
 }
 
 console.log("\nstakes");
@@ -182,11 +168,11 @@ const belongingAnswers = [
   { cardId: 15, value: -1 },
 ];
 const belongingRank = rankClubs(belongingAnswers, undefined, { stake: "belonging" });
-const millwallAt = belongingRank.findIndex((row) => row.club.slug === "millwall");
+const evertonAt = belongingRank.findIndex((row) => row.club.slug === "everton");
 const brightonAt = belongingRank.findIndex((row) => row.club.slug === "brighton");
-if (millwallAt < 0 || brightonAt < 0 || millwallAt > brightonAt) {
+if (evertonAt < 0 || brightonAt < 0 || evertonAt > brightonAt) {
   failures++;
-  console.log(`FAIL suit: Millwall rank ${millwallAt} Brighton rank ${brightonAt}`);
+  console.log(`FAIL suit: Everton rank ${evertonAt} Brighton rank ${brightonAt}`);
 }
 
 const loveAnswers = DECKS.love.map((card) => ({ cardId: card.id, value: card.leftValue }));
