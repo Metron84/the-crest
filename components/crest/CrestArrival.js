@@ -115,6 +115,7 @@ export default function CrestArrival({ answers, group, stake = null, roots = nul
   return (
     <section className={styles.arrival}>
       <ResultCards outcome={outcome} />
+      <MatchedOn outcome={outcome} />
 
       {outcome.closeCall && outcome.runnerUp ? (
         <p className={styles.line}>
@@ -184,6 +185,22 @@ export default function CrestArrival({ answers, group, stake = null, roots = nul
         </div>
       </div>
     </section>
+  );
+}
+
+/**
+ * "Matched on Trust and Love." The two foundations the fan and Your FC share most.
+ *
+ * @param {{ outcome: ReturnType<typeof buildOutcome> }} props
+ */
+function MatchedOn({ outcome }) {
+  const f = outcome.foundations;
+  if (!f || !f.matchedOn.length || !outcome.built) return null;
+  const words = f.matchedOn.join(" and ");
+  return (
+    <p className={styles.line}>
+      You and {outcome.built.name} are matched on {words}.
+    </p>
   );
 }
 
