@@ -73,3 +73,7 @@ After the result screen renders, the app also posts the run to `/api/crest-runs`
 215 clubs. `division` is the league name. `region` is one of the six. Rest of the World has `subregion` "Rest of Europe" or "Arab world" (United Arab Emirates, Saudi Arabia, Egypt, Tunisia).
 
 Families are lowercase shirt colours. White is not a family. Claret is stored as red. Aston Villa's families are red and blue.
+
+## Matched on
+
+Under the result cards: "You and [club] are matched on [foundation] and [foundation]." The two of the ten thinker foundations the fan and Your FC share most. It explains the result and does not change the ranking. See `docs/FOUNDATIONS.md`.
